@@ -1,208 +1,214 @@
-"use client";
-
-import React, { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-
-export default function LandingPage() {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setMenuOpen(false);
-    }
-  };
-
+export default function Page() {
   return (
-    <div className="py-2 bg-[#0b132b]" id="background">
- {/* Navbar */}
-<nav className="fixed w-full z-20 top-0 start-0 bg-gradient-to-r from-[#192841] via-[#1e3358] to-[#253b6e] shadow-[0_4px_30px_rgba(0,0,0,0.3)] border-b border-[#4c6ef5]/30 backdrop-blur-lg">
-  <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto px-6 py-3">
-    {/* Logo */}
-    <Link href="/" className="flex items-center space-x-3">
-      <Image
-        src="/logo1.png"
-        alt="Logo"
-        width={36}
-        height={36}
-        className="rounded-full"
-      />
-      <span className="text-2xl font-bold tracking-wide font-poppins bg-gradient-to-r from-[#8b5cf6] via-[#ec4899] to-[#3b82f6] bg-clip-text text-transparent">
-        AI Presentation Coach
-      </span>
-    </Link>
+    <main className="bg-white text-gray-900">
+      {/* Fixed Navbar */}
+      <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-200">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+          {/* Left: Logo + Brand */}
+          <a href="/" className="flex items-center gap-2">
+            <img
+              src="/logo1.png"
+              alt="AI Presentation Coach logo"
+              className="h-8 w-8 rounded-md object-contain"
+            />
+            <span className="text-sm font-semibold tracking-tight text-gray-900">
+              AI Presentation Coach
+            </span>
+          </a>
 
-    {/* Desktop Menu */}
-    <div className="hidden md:flex items-center space-x-10">
-      {["Features", "About", "Contact"].map((item, index) => (
-        <button
-          key={index}
-          onClick={() => scrollToSection(item.toLowerCase())}
-          className="relative text-gray-100 font-medium tracking-wide transition-all duration-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#a78bfa] hover:to-[#60a5fa]
-                     after:content-[''] after:block after:w-0 after:h-[2px] after:bg-gradient-to-r after:from-[#a78bfa] after:to-[#60a5fa] after:transition-all after:duration-300 hover:after:w-full"
-          style={{ backgroundColor: "transparent" }}
-        >
-          {item}
-        </button>
-      ))}
+          {/* Center/Left: Nav Links */}
+          <div className="hidden md:flex items-center gap-6">
+            <a href="#features" className="text-sm text-gray-700 hover:text-gray-900">
+              Features
+            </a>
+            <a href="#about" className="text-sm text-gray-700 hover:text-gray-900">
+              About
+            </a>
+            <a href="#contact" className="text-sm text-gray-700 hover:text-gray-900">
+              Contact
+            </a>
+          </div>
 
-      {/* Try Demo Button */}
-      <Link href="/signup">
-        <button className="ml-4 px-6 py-2 bg-gradient-to-r from-[#2563eb] to-[#7c3aed] hover:from-[#4f46e5] hover:to-[#9333ea] rounded-lg text-white font-semibold shadow-lg shadow-[#1e3a8a]/30 transition-transform transform hover:scale-105">
-          Try Demo
-        </button>
-      </Link>
-    </div>
+          {/* Right: Login */}
+          <div className="flex items-center gap-3">
+            <a
+              href="/login"
+              className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Login
+            </a>
+            <a
+              href="/signup"
+              className="hidden sm:inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Get Started
+            </a>
+          </div>
+        </nav>
+      </header>
 
-    {/* Mobile Menu Button */}
-    <button
-      onClick={() => setMenuOpen(!menuOpen)}
-      type="button"
-      className="md:hidden text-gray-300 hover:text-white focus:outline-none"
-    >
-      <svg
-        className="w-6 h-6"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-        />
-      </svg>
-    </button>
+      {/* Spacer for fixed header */}
+      <div className="h-16" />
+
+      {/* Hero with light green gradient */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-emerald-50 via-green-50 to-white" />
+        <div className="mx-auto max-w-7xl px-6 py-24 sm:py-28 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
+              Enhance Your Presentation Skills with AI
+            </h1>
+            <p className="mt-4 text-lg text-gray-700">
+              Get instant AI-powered feedback on your tone, body language, confidence, and eye contact — become a confident speaker faster.
+            </p>
+
+            <div className="mt-8 flex items-center justify-center gap-3">
+              <a
+                href="/signup"
+                className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                Get Started
+              </a>
+              <a
+                href="/login"
+                className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+              >
+                Login
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+     {/* Features with 3 elevated green cards */}
+<section id="features" className="mx-auto max-w-7xl px-6 py-16 lg:px-8 scroll-mt-20">
+  <div className="mx-auto max-w-2xl text-center">
+    <h2 className="text-2xl font-bold tracking-tight text-gray-900">Core Features</h2>
+    <p className="mt-2 text-sm text-gray-600">
+      Practice smarter with real-time coaching and clear progress tracking.
+    </p>
   </div>
 
-  {/* Mobile Menu */}
-  {menuOpen && (
-    <div className="md:hidden bg-[#1c2747]/90 text-center py-4 space-y-3 backdrop-blur-md">
-      {["Features", "About", "Contact"].map((item, index) => (
-        <button
-          key={index}
-          onClick={() => scrollToSection(item.toLowerCase())}
-          className="block text-gray-100 hover:text-purple-400 font-medium transition"
-          style={{ backgroundColor: "transparent" }}
-        >
-          {item}
-        </button>
-      ))}
-      <Link href="/signup">
-        <button className="px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-purple-700 hover:to-blue-700 rounded-lg text-white font-semibold transition-transform transform hover:scale-105">
-          Try Demo
-        </button>
-      </Link>
-    </div>
-  )}
-</nav>
-
-      {/* Hero Section */}
-      <div className="flex flex-col p-4 gap-y-3 pt-28">
-        <section className="h-screen flex items-center justify-center text-center">
-          <div className="container mx-auto px-4">
-            <h2 className="text-5xl sm:text-6xl font-bold mb-8 font-poppins bg-gradient-to-r from-purple-400 via-pink-500 to-yellow-400 bg-clip-text text-transparent">
-              Enhance Your Presentation Skills with AI
-            </h2>
-            <p className="text-lg sm:text-xl md:text-2xl mb-8 text-gray-300 font-poppins max-w-3xl mx-auto">
-              Get instant AI-powered feedback on your tone, body language,
-              confidence, and eye contact — helping you become a confident
-              speaker.
-            </p>
-            <Link href="/signup">
-              <button className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg text-white font-semibold text-lg transition">
-                Start Practicing
-              </button>
-            </Link>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section
-          id="features"
-          className="py-16 bg-[#1c2541] text-center text-gray-200"
-        >
-          <h2 className="text-4xl font-bold mb-12 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-            Core Features
-          </h2>
-          <div className="flex flex-col md:flex-row justify-center items-center gap-8 px-8">
-            <div className="card max-w-sm bg-[#3a506b] p-6 rounded-2xl shadow-lg hover:scale-105 transition">
-              <h3 className="text-2xl font-semibold text-yellow-400 mb-3">
-                Real-Time Feedback
-              </h3>
-              <p className="text-gray-300">
-                AI analyzes your voice, tone, and facial expression while you
-                speak — giving actionable suggestions.
-              </p>
-            </div>
-
-            <div className="card max-w-sm bg-[#3a506b] p-6 rounded-2xl shadow-lg hover:scale-105 transition">
-              <h3 className="text-2xl font-semibold text-yellow-400 mb-3">
-                Progress Dashboard
-              </h3>
-              <p className="text-gray-300">
-                Track your improvement with charts showing confidence,
-                engagement, and performance scores.
-              </p>
-            </div>
-
-            <div className="card max-w-sm bg-[#3a506b] p-6 rounded-2xl shadow-lg hover:scale-105 transition">
-              <h3 className="text-2xl font-semibold text-yellow-400 mb-3">
-                Eye Contact Metrics
-              </h3>
-              <p className="text-gray-300">
-                Analyze how effectively you maintain audience engagement through
-                visual focus and expressions.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* About Section */}
-        <section
-          id="about"
-          className="h-screen flex flex-col items-center justify-center text-center text-gray-200 bg-[#0b132b]"
-        >
-          <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-500 to-blue-400 bg-clip-text text-transparent">
-            About AI Presentation Coach
-          </h2>
-          <p className="max-w-2xl text-lg text-gray-400">
-            This platform helps users practice and refine their presentation
-            skills using advanced AI that tracks voice tone, confidence, and
-            audience engagement metrics — ensuring every speaker improves over
-            time.
-          </p>
-        </section>
-
-        {/* Contact Section */}
-        <section
-          id="contact"
-          className="h-screen flex flex-col items-center justify-center text-center bg-[#1c2541] text-gray-200"
-        >
-          <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-            Contact Us
-          </h2>
-          <p className="text-lg text-gray-400 mb-6">
-            Have questions or want to collaborate? Get in touch!
-          </p>
-          <Link href="/contact">
-            <button className="bg-purple-600 hover:bg-purple-700 px-8 py-3 rounded-lg text-white font-semibold">
-              Get in Touch
-            </button>
-          </Link>
-        </section>
+  <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {/* Card 1 */}
+    <div className="group relative rounded-2xl border border-emerald-100 bg-emerald-50/70 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200">
+      {/* subtle gradient glow on hover */}
+      <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+           style={{ background: "radial-gradient(800px 200px at 50% 0%, rgba(16,185,129,0.15), transparent 60%)" }} />
+      <div className="relative">
+        <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 transition group-hover:ring-emerald-300">
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18v2H3zM3 11h12v2H3zM3 17h18v2H3z"/></svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900">Real-Time Feedback</h3>
+        <p className="mt-2 text-sm text-gray-700">
+          AI analyzes your voice, tone, and facial expression as you speak—giving actionable suggestions you can apply immediately.
+        </p>
+        <div className="mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 opacity-60 transition group-hover:opacity-100" />
       </div>
+    </div>
+
+    {/* Card 2 */}
+    <div className="group relative rounded-2xl border border-emerald-100 bg-emerald-50/70 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200">
+      <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+           style={{ background: "radial-gradient(800px 200px at 50% 0%, rgba(16,185,129,0.15), transparent 60%)" }} />
+      <div className="relative">
+        <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 transition group-hover:ring-emerald-300">
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h4v8H3zM10 9h4v12h-4zM17 3h4v18h-4z"/></svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900">Progress Dashboard</h3>
+        <p className="mt-2 text-sm text-gray-700">
+          Track improvement with clear charts for confidence, engagement, and performance scores over time.
+        </p>
+        <div className="mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 opacity-60 transition group-hover:opacity-100" />
+      </div>
+    </div>
+
+    {/* Card 3 */}
+    <div className="group relative rounded-2xl border border-emerald-100 bg-emerald-50/70 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200">
+      <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+           style={{ background: "radial-gradient(800px 200px at 50% 0%, rgba(16,185,129,0.15), transparent 60%)" }} />
+      <div className="relative">
+        <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 transition group-hover:ring-emerald-300">
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm-9 9a9 9 0 1118 0H3z"/></svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900">Eye Contact Metrics</h3>
+        <p className="mt-2 text-sm text-gray-700">
+          See how effectively you maintain audience attention through visual focus and expressions.
+        </p>
+        <div className="mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 opacity-60 transition group-hover:opacity-100" />
+      </div>
+    </div>
+  </div>
+</section>
+
+
+      {/* Why Choose Us */}
+      <section id="about" className="bg-emerald-50/50 scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+          <div className="mx-auto max-w-3xl">
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900">Why Choose AI Presentation Coach</h2>
+            <p className="mt-3 text-sm text-gray-700">
+              Built for students, professionals, and public speakers, this coach turns practice into progress with guidance that’s clear, motivating, and tailored to your delivery.
+            </p>
+            <p className="mt-3 text-sm text-gray-700">
+              Instead of guessing what to fix, you’ll know exactly what to improve—so you can speak with confidence and connect with any audience.
+            </p>
+            <div className="mt-6">
+              <a
+                href="/signup"
+                className="inline-flex rounded-lg bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                Start Practicing
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact / Support */}
+      <section id="contact" className="mx-auto max-w-7xl px-6 py-16 lg:px-8 scroll-mt-20">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900">Contact & Support</h2>
+          <p className="mt-3 text-sm text-gray-700">
+            Questions or feedback? The team is here to help you succeed. Reach out anytime and get friendly, practical guidance.
+          </p>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-gray-200 p-5">
+              <p className="text-sm font-semibold text-gray-900">Email</p>
+              <a
+                href="mailto:support@aipresentationcoach.com"
+                className="mt-1 block text-sm text-indigo-600 hover:underline"
+              >
+               qbux4935@gmail.com
+              </a>
+            </div>
+
+           
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="bg-[#0b132b] text-center py-6 border-t border-gray-700">
-        <p className="text-gray-400 text-sm">
-          © 2025 AI Presentation Coach. All rights reserved.
-        </p>
+      <footer className="border-t border-gray-200 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <p className="text-xs text-gray-500">© 2025 AI Presentation Coach. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700">
+                Features
+              </a>
+              <a href="#about" className="text-xs text-gray-500 hover:text-gray-700">
+                About
+              </a>
+              <a href="#contact" className="text-xs text-gray-500 hover:text-gray-700">
+                Support
+              </a>
+            </div>
+          </div>
+        </div>
       </footer>
-    </div>
+    </main>
   );
 }
