@@ -1,29 +1,36 @@
-import jwt
 import bcrypt
+import jwt
+import datetime
+import os
+from dotenv import load_dotenv
 
-SECRET_KEY = "eloquence_key"  
+load_dotenv()
+SECRET_KEY = os.getenv("JWT_SECRET")
 
-# Hash the password
+#  Hash password
 def hash_password(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
-# Check the hashed password
-def check_password(hashed_password, password):
-    return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
+#  Check password
+def check_password(plain_password, hashed_password):
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
-# Generate JWT
-def generate_token(username):
+#  Generate JWT token
+def generate_token(email):
     payload = {
-        'username': username,
+        'email': email,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=6)
     }
     return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
 
-# Verify JWT
+#  Verify JWT token
 def verify_token(token):
     try:
-        decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return decoded['username']  # Return username if token is valid
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['email']
     except jwt.ExpiredSignatureError:
-        return None  # Token has expired
+        return None
     except jwt.InvalidTokenError:
-        return None  # Token is invalid
+        return None
