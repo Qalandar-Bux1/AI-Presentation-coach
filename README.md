@@ -1,5 +1,4 @@
 AI Presentation Coach
-
 Project Description
 
 The AI Presentation Coach is a web-based application designed to help users improve their presentation skills. The system will eventually provide AI-powered feedback analyzing eye contact, posture, gestures, filler words, and speech clarity.
@@ -40,8 +39,6 @@ Backend:
 
 Flask
 
-
-
 GUI / Future AI Modules:
 
 Mediapipe / OpenCV / NLP libraries (for AI feedback, future implementation)
@@ -52,7 +49,7 @@ GitHub
 
 Installation
 Backend (Flask)
-git clone 
+git clone https://github.com/yourusername/ai-presentation-coach.git
 cd backend
 python -m venv venv
 source venv/bin/activate       # Linux / Mac
@@ -67,8 +64,6 @@ npm run dev
 
 
 Open http://localhost:3000 in your browser.
-
-
 
 Future Work
 
