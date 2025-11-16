@@ -44,7 +44,10 @@ const PreviewModal = ({ isOpen, onClose, recordedChunks, isVideoEnabled, uploade
               src={previewUrl}
               controls
               autoPlay
-              className="w-full h-auto rounded-lg"
+              playsInline
+              disablePictureInPicture
+              controlsList="nodownload noplaybackrate"
+              className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
             />
           ) : (
             <audio src={previewUrl} controls className="w-full" />
