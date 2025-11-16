@@ -17,21 +17,45 @@ collection_users = db["user"]
 def create_user():
     try:
         data = request.get_json()
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
 
-        if not all([username, email, password]):
-            return jsonify({"error": "All fields are required"}), 400
+        username = (data.get('username') or "").strip()
+        email = (data.get('email') or "").strip()
+        password = (data.get('password') or "").strip()
+        role = data.get('role', 'student')
+        studentId = data.get('studentId')
+        program = data.get('program')
+        semester = data.get('semester')
+        phone = data.get('phone')
 
+        # 1️⃣ Check empty required fields
+        if not username or not email or not password:
+            return jsonify({"error": "Name, email, and password are required"}), 400
+
+        # 2️⃣ Check email format
+        import re
+        email_pattern = r"[^@]+@[^@]+\.[^@]+"
+        if not re.match(email_pattern, email):
+            return jsonify({"error": "Invalid email address"}), 400
+
+        # 3️⃣ Check password minimum length
+        if len(password) < 6:
+            return jsonify({"error": "Password must be at least 6 characters long"}), 400
+
+        # 4️⃣ Check if user already exists
         if collection_users.find_one({'email': email}):
-            return jsonify({"error": "User already exists"}), 400
+            return jsonify({"error": "User already exists"}), 409
 
+        # 5️⃣ Save user
         hashed_password = hash_password(password)
         collection_users.insert_one({
             'username': username,
             'email': email,
-            'password': hashed_password
+            'password': hashed_password,
+            'role': role,
+            'studentId': studentId,
+            'program': program,
+            'semester': semester,
+            'phone': phone,
         })
 
         return jsonify({
@@ -41,6 +65,7 @@ def create_user():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 #  LOGIN USER
