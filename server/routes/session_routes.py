@@ -67,6 +67,8 @@ def upload_video():
         if not user:
             return jsonify({"error": "User not found"}), 404
 
+        print("Request.files keys:", request.files.keys())  # ✅ debug
+
         if 'file' not in request.files:
             return jsonify({"error": "No file part in request"}), 400
 
@@ -77,34 +79,29 @@ def upload_video():
         if not _allowed_file(file.filename):
             return jsonify({"error": "Unsupported file type. Only MP4 and WEBM allowed"}), 400
 
+        # Save file
         base_name = secure_filename(file.filename)
         ext = base_name.rsplit(".", 1)[1].lower()
         unique_name = f"{str(user['_id'])}_{int(datetime.now().timestamp())}.{ext}"
         save_path = os.path.join(UPLOAD_FOLDER, unique_name)
         file.save(save_path)
 
-        # Optional times from client
-        start_time = request.form.get('start_time') or datetime.now().isoformat()
-        end_time = request.form.get('end_time') or None
-
         session_data = {
             "user_id": str(user["_id"]),
             "video_path": unique_name,
-            "start_time": start_time,
-            "end_time": end_time,
+            "start_time": request.form.get('start_time') or datetime.now().isoformat(),
+            "end_time": request.form.get('end_time') or None,
             "created_at": datetime.now().isoformat(),
         }
         result = collection_sessions.insert_one(session_data)
-        
-        # Get the inserted document and convert _id to string for JSON serialization
         inserted_session = collection_sessions.find_one({"_id": result.inserted_id})
-        if inserted_session:
-            inserted_session["_id"] = str(inserted_session["_id"])
+        inserted_session["_id"] = str(inserted_session["_id"])
 
         return jsonify({"success": True, "filename": unique_name, "session": inserted_session}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 #  GET USER SESSIONS
