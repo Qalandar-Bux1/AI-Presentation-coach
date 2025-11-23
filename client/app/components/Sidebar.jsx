@@ -23,36 +23,22 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-white/10 backdrop-blur-2xl text-white border-r border-white/20 shadow-2xl flex flex-col z-40">
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-indigo-900/60 to-purple-900/80 -z-10"></div>
-      
-      {/* Pattern Overlay */}
-      <div className="absolute inset-0 opacity-5 -z-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }}></div>
-      </div>
-
+    <aside className="fixed left-0 top-0 h-full w-64 glass border-r border-primary-200/30 shadow-glass flex flex-col z-40">
       {/* Gradient Accent Line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500"></div>
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-ai"></div>
 
       {/* Logo Section */}
       <div className="px-6 py-6">
         <Link href="/dashboard">
           <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative p-3 bg-gradient-to-br from-purple-500 via-blue-500 to-pink-500 rounded-2xl group-hover:scale-110 transition-all duration-300 shadow-xl group-hover:shadow-2xl group-hover:shadow-purple-500/50">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
-              <img src="/logo1.png" alt="logo" className="w-10 h-10 relative z-10 drop-shadow-lg" />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative p-3 btn-gradient rounded-2xl group-hover:scale-110 transition-all duration-300 shadow-lg group-hover:glow-cyan">
+              <img src="/logo1.png" alt="logo" className="w-10 h-10 relative z-10" />
             </div>
             <div>
-              <span className="text-xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent group-hover:from-white group-hover:via-purple-200 group-hover:to-pink-200 transition-all duration-300">
+              <span className="text-xl font-bold text-gradient">
                 AI Coach
               </span>
-              <p className="text-xs text-white/60 group-hover:text-white/80 transition-colors duration-300">Presentation Mastery</p>
+              <p className="text-xs text-slate-600 group-hover:text-slate-700 transition-colors duration-300">Presentation Mastery</p>
             </div>
           </div>
         </Link>
@@ -71,22 +57,22 @@ export default function Sidebar() {
                   className={`flex items-center gap-3 px-4 py-3 text-sm font-medium cursor-pointer transition-all duration-200 rounded-xl
                     ${
                       isActive
-                        ? "bg-gradient-to-r from-indigo-600/80 to-purple-600/80 text-white shadow-lg shadow-indigo-500/50"
-                        : "text-white/70 hover:text-white hover:bg-white/10"
+                        ? "btn-gradient text-white shadow-lg glow-cyan"
+                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                     }
                     ${item.disabled ? "opacity-40 cursor-not-allowed" : ""}
                   `}
                 >
                   {isActive && (
-                    <div className="absolute left-0 w-1 h-8 bg-gradient-to-b from-white via-indigo-200 to-purple-200 rounded-r-full"></div>
+                    <div className="absolute left-0 w-1 h-8 bg-gradient-ai rounded-r-full"></div>
                   )}
                   <Icon 
                     size={20} 
-                    className={isActive ? "text-white" : "text-white/60"}
+                    className={isActive ? "text-white" : "text-slate-500"}
                   />
                   <span className="flex-1">{item.label}</span>
                   {item.disabled && (
-                    <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full text-white/50">Soon</span>
+                    <span className="text-xs bg-primary-100 px-2 py-0.5 rounded-full text-primary-600">Soon</span>
                   )}
                 </div>
               </Link>
@@ -104,7 +90,7 @@ export default function Sidebar() {
             localStorage.removeItem("userId");
             window.location.href = "/";
           }}
-          className="w-full flex items-center justify-center gap-2.5 px-5 py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 hover:from-purple-700 hover:via-blue-700 hover:to-pink-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/40 transform hover:scale-[1.02]"
+          className="w-full flex items-center justify-center gap-2.5 px-5 py-3 text-sm font-semibold text-white btn-gradient rounded-xl transition-all duration-300 shadow-lg transform hover:scale-[1.02]"
         >
           <LogOut size={16} />
           <span>Logout</span>
