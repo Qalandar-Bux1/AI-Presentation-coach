@@ -3,11 +3,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -67,55 +69,50 @@ export default function Login() {
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white relative overflow-hidden">
-      {/* Animated Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }}></div>
-      </div>
+    <section className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Animated Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-soft"></div>
       
-      {/* Gradient Orbs */}
-      <div className="absolute top-20 right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-20 left-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+      {/* Floating Gradient Orbs */}
+      <div className="absolute top-20 right-20 w-96 h-96 bg-ai-cyan rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+      <div className="absolute bottom-20 left-20 w-96 h-96 bg-ai-purple rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo Section */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg">
+            <div className="p-3 btn-gradient rounded-2xl shadow-lg">
               <img src="/logo1.png" alt="logo" className="h-10 w-10" />
             </div>
             <div className="text-left">
-              <span className="text-2xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold text-gradient">
                 AI Coach
               </span>
-              <p className="text-xs text-white/60">Presentation Mastery</p>
+              <p className="text-xs text-slate-600">Presentation Mastery</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-white/20">
+        <div className="glass rounded-3xl shadow-glass p-10 border border-primary-200/30 max-w-full overflow-hidden">
           <h1 className="text-3xl font-bold text-center mb-2">
-            <span className="bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent">
+            <span className="text-gradient">
               Welcome Back 👋
             </span>
           </h1>
-          <p className="text-center text-white/70 text-sm mb-8">Sign in to continue your journey</p>
+          <p className="text-center text-slate-600 text-sm mb-8">Sign in to continue your journey</p>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
+          <form className="space-y-6 w-full max-w-full" onSubmit={handleSubmit}>
+            <div className="w-full">
               <label
                 htmlFor="email"
-                className="text-white text-sm font-semibold mb-2 block"
+                className="text-slate-700 text-sm font-semibold mb-2 block"
               >
                 Email Address
               </label>
               <input
                 type="email"
                 name="email"
-                className="w-full px-4 py-3 rounded-xl border border-white/30 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white/10 backdrop-blur-sm text-white placeholder:text-white/50"
+                className="w-full box-border px-4 py-3 rounded-xl border border-primary-200/50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition bg-white/80 backdrop-blur-sm text-slate-800 placeholder:text-slate-400"
                 placeholder="you@example.com"
                 required
                 onChange={onChange}
@@ -123,22 +120,41 @@ export default function Login() {
               />
             </div>
 
-            <div>
+            <div className="w-full">
               <label
                 htmlFor="password"
-                className="text-white text-sm font-semibold mb-2 block"
+                className="text-slate-700 text-sm font-semibold mb-2 block"
               >
                 Password
               </label>
-              <input
-                type="password"
-                name="password"
-                className="w-full px-4 py-3 rounded-xl border border-white/30 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-white/10 backdrop-blur-sm text-white placeholder:text-white/50"
-                placeholder="••••••••"
-                required
-                onChange={onChange}
-                value={credentials.password}
-              />
+              <div className="relative w-full">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  className="w-full box-border px-4 py-3 pr-12 rounded-xl border border-primary-200/50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition bg-white/80 backdrop-blur-sm text-slate-800 placeholder:text-slate-400"
+                  placeholder="••••••••"
+                  required
+                  onChange={onChange}
+                  value={credentials.password}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none z-10 pointer-events-auto"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <Link
+                href="/forgot-password"
+                className="text-primary-600 text-sm font-semibold hover:text-primary-700 hover:underline transition-colors"
+              >
+                Forgot Password?
+              </Link>
             </div>
 
             {error && (
@@ -155,14 +171,14 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-indigo-400 disabled:to-purple-400 disabled:cursor-not-allowed text-white rounded-xl py-4 font-semibold transition-all shadow-xl hover:shadow-2xl transform hover:scale-[1.02] disabled:transform-none"
+              className="w-full btn-gradient disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-4 font-semibold transition-all shadow-xl transform hover:scale-[1.02] disabled:transform-none"
             >
               {loading ? "Logging in..." : "Login"}
             </button>
 
-            <p className="text-center text-white/70 text-sm">
+            <p className="text-center text-slate-600 text-sm">
               Don't have an account?{" "}
-              <Link href="/signup" className="text-indigo-300 font-semibold hover:text-indigo-200 hover:underline transition-colors">
+              <Link href="/signup" className="text-primary-600 font-semibold hover:text-primary-700 hover:underline transition-colors">
                 Sign up
               </Link>
             </p>

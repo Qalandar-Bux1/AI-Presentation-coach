@@ -157,42 +157,35 @@ export default function MyVideosPage() {
   const current = videos.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className="flex bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 min-h-screen relative overflow-hidden">
-      {/* Animated Background Pattern */}
+    <div className="flex min-h-screen relative overflow-hidden">
+      {/* Animated Background Pattern - matches landing page */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(0, 217, 255, 0.1) 1px, transparent 0)`,
           backgroundSize: '50px 50px'
         }}></div>
       </div>
       
-      {/* Gradient Orbs */}
-      <div className="absolute top-20 right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-20 left-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+      {/* Gradient Orbs - matches landing page */}
+      <div className="absolute top-20 right-20 w-96 h-96 bg-ai-cyan rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+      <div className="absolute bottom-20 left-20 w-96 h-96 bg-ai-purple rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
 
       <Sidebar />
       <main className="flex-1 ml-64 p-10 relative z-10">
         <ToastContainer />
         
-        {/* Header Section with Gradient Background */}
-        <div className="relative bg-gradient-to-br from-purple-600 via-pink-600 to-red-500 rounded-3xl p-8 mb-8 overflow-hidden">
-          {/* Animated Background Pattern */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 3px 3px, white 1px, transparent 0)`,
-              backgroundSize: '50px 50px'
-            }}></div>
-          </div>
+        {/* Header Section with Glass Effect */}
+        <div className="relative glass rounded-3xl p-8 mb-8 overflow-hidden shadow-glass">
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-xl rounded-2xl border border-white/30">
+              <div className="p-3 btn-gradient rounded-2xl shadow-lg">
                 <Video size={32} className="text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-white mb-1">
+                <h1 className="text-4xl font-bold text-slate-800 mb-1">
                   My Videos
                 </h1>
-                <p className="text-white/90 text-base">Manage and review all your recorded presentations</p>
+                <p className="text-slate-600 text-base">Manage and review all your recorded presentations</p>
               </div>
             </div>
           </div>
@@ -200,25 +193,25 @@ export default function MyVideosPage() {
 
         {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white/15 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20 hover:bg-white/20 transition-all transform hover:scale-105">
+          <div className="glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all transform hover:scale-105">
             <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 rounded-xl">
+              <div className="p-3 btn-gradient rounded-xl shadow-lg">
                 <Video className="text-white" size={24} />
               </div>
-              <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
+              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
             </div>
-            <p className="text-white/70 text-sm font-medium mb-1">Total Videos</p>
-            <p className="text-3xl font-bold text-white">{videos.length}</p>
+            <p className="text-slate-600 text-sm font-medium mb-1">Total Videos</p>
+            <p className="text-3xl font-bold text-slate-800">{videos.length}</p>
           </div>
-          <div className="bg-white/15 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20 hover:bg-white/20 transition-all transform hover:scale-105">
+          <div className="glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all transform hover:scale-105">
             <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 rounded-xl">
+              <div className="p-3 btn-gradient rounded-xl shadow-lg">
                 <Calendar className="text-white" size={24} />
               </div>
-              <div className="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"></div>
+              <div className="h-2 w-2 bg-yellow-500 rounded-full animate-pulse"></div>
             </div>
-            <p className="text-white/70 text-sm font-medium mb-1">This Month</p>
-            <p className="text-3xl font-bold text-white">
+            <p className="text-slate-600 text-sm font-medium mb-1">This Month</p>
+            <p className="text-3xl font-bold text-slate-800">
               {videos.filter(v => {
                 const videoDate = new Date(v.start_time);
                 const now = new Date();
@@ -226,15 +219,15 @@ export default function MyVideosPage() {
               }).length}
             </p>
           </div>
-          <div className="bg-white/15 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20 hover:bg-white/20 transition-all transform hover:scale-105">
+          <div className="glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all transform hover:scale-105">
             <div className="flex items-center justify-between mb-3">
-              <div className="p-3 bg-white/20 rounded-xl">
+              <div className="p-3 btn-gradient rounded-xl shadow-lg">
                 <Clock className="text-white" size={24} />
               </div>
-              <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse"></div>
+              <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
             </div>
-            <p className="text-white/70 text-sm font-medium mb-1">Recent</p>
-            <p className="text-2xl font-bold text-white">
+            <p className="text-slate-600 text-sm font-medium mb-1">Recent</p>
+            <p className="text-2xl font-bold text-slate-800">
               {videos.length > 0 ? new Date(videos[0].start_time).toLocaleDateString() : "—"}
             </p>
           </div>
@@ -243,19 +236,19 @@ export default function MyVideosPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-400 mx-auto mb-4"></div>
-              <p className="text-white/70">Loading your videos...</p>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-500 mx-auto mb-4"></div>
+              <p className="text-slate-600">Loading your videos...</p>
             </div>
           </div>
         ) : error ? (
-          <div className="bg-red-500/20 backdrop-blur-xl border-2 border-red-300/50 rounded-2xl p-8">
+          <div className="glass border-2 border-red-300/50 rounded-2xl p-8">
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-red-500/30 rounded-xl">
-                <Video className="text-red-200" size={24} />
+              <div className="p-3 bg-red-100 rounded-xl">
+                <Video className="text-red-600" size={24} />
               </div>
               <div className="flex-1">
-                <p className="text-red-200 font-bold text-lg mb-2">Error Loading Videos</p>
-                <p className="text-red-300 mb-4">{error}</p>
+                <p className="text-red-600 font-bold text-lg mb-2">Error Loading Videos</p>
+                <p className="text-red-500 mb-4">{error}</p>
                 <button
                   onClick={() => {
                     setError("");
@@ -271,15 +264,15 @@ export default function MyVideosPage() {
             </div>
           </div>
         ) : videos.length === 0 ? (
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-16 text-center">
-            <div className="inline-flex p-6 bg-white/20 rounded-full mb-6">
+          <div className="glass rounded-2xl shadow-glass p-16 text-center">
+            <div className="inline-flex p-6 btn-gradient rounded-full mb-6 shadow-lg">
               <Video className="text-white" size={64} />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-2">No Videos Yet</h3>
-            <p className="text-white/70 mb-6">Start recording to create your first presentation video</p>
+            <h3 className="text-2xl font-bold text-slate-800 mb-2">No Videos Yet</h3>
+            <p className="text-slate-600 mb-6">Start recording to create your first presentation video</p>
             <button
               onClick={() => (window.location.href = "/session")}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl"
+              className="btn-gradient text-white px-8 py-3 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl"
             >
               Start Recording
             </button>
@@ -293,7 +286,7 @@ export default function MyVideosPage() {
                 const videoName = fileName || `Video ${v._id?.slice(-6) || ""}`;
                 
                 return (
-                  <div key={v._id || Math.random()} className="group bg-white/15 backdrop-blur-xl rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/20 overflow-hidden transform hover:-translate-y-2 hover:scale-[1.02]">
+                  <div key={v._id || Math.random()} className="group glass rounded-2xl shadow-glass hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2 hover:scale-[1.02]">
                     {/* Video Player */}
                     <div className="relative">
                       {src ? (
@@ -304,7 +297,7 @@ export default function MyVideosPage() {
                         </div>
                       )}
                       {v.feedback && (
-                        <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                        <div className="absolute top-3 right-3 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold shadow-lg border border-green-300">
                           ✓ Analyzed
                         </div>
                       )}
@@ -312,7 +305,7 @@ export default function MyVideosPage() {
 
                     {/* Video Info */}
                     <div className="p-5">
-                      <div className="flex items-center gap-2 text-xs text-white/70 mb-4">
+                      <div className="flex items-center gap-2 text-xs text-slate-600 mb-4">
                         <Calendar size={14} />
                         <span>{v?.start_time ? new Date(v.start_time).toLocaleDateString() : "—"}</span>
                         <span className="mx-1">•</span>
@@ -324,7 +317,7 @@ export default function MyVideosPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => handleDownload(v.video_path, videoName)}
-                          className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl text-sm font-semibold transition-all shadow-lg hover:shadow-xl hover:shadow-indigo-500/30 transform hover:scale-105"
+                          className="flex items-center justify-center gap-2 btn-gradient text-white py-3 px-4 rounded-xl text-sm font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                           title="Download video"
                         >
                           <Download size={18} />
@@ -332,7 +325,7 @@ export default function MyVideosPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(v._id, videoName)}
-                          className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-3 px-4 rounded-xl text-sm font-semibold transition-all shadow-lg hover:shadow-xl hover:shadow-red-500/30 transform hover:scale-105"
+                          className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-3 px-4 rounded-xl text-sm font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                           title="Delete video"
                         >
                           <Trash2 size={18} />
@@ -351,7 +344,7 @@ export default function MyVideosPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-6 py-2.5 rounded-xl border-2 border-white/30 text-sm font-medium bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+                  className="px-6 py-2.5 rounded-xl border-2 border-primary-200/50 text-sm font-medium glass hover:shadow-md text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                 >
                   Previous
                 </button>
@@ -362,8 +355,8 @@ export default function MyVideosPage() {
                       onClick={() => setPage(i + 1)}
                       className={`w-10 h-10 rounded-lg font-medium transition-all ${
                         page === i + 1
-                          ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-                          : "bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/30"
+                          ? "btn-gradient text-white shadow-lg"
+                          : "glass text-slate-700 hover:shadow-md border border-primary-200/30"
                       }`}
                     >
                       {i + 1}
@@ -373,7 +366,7 @@ export default function MyVideosPage() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-6 py-2.5 rounded-xl border-2 border-white/30 text-sm font-medium bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+                  className="px-6 py-2.5 rounded-xl border-2 border-primary-200/50 text-sm font-medium glass hover:shadow-md text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                 >
                   Next
                 </button>

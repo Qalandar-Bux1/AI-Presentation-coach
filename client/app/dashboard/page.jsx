@@ -107,79 +107,71 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 min-h-screen relative overflow-hidden">
-      {/* Animated Background Pattern */}
+    <div className="flex min-h-screen relative overflow-hidden">
+      {/* Animated Background Pattern - matches landing page */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(0, 217, 255, 0.1) 1px, transparent 0)`,
           backgroundSize: '50px 50px'
         }}></div>
       </div>
       
-      {/* Gradient Orbs */}
-      <div className="absolute top-20 right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-20 left-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+      {/* Gradient Orbs - matches landing page */}
+      <div className="absolute top-20 right-20 w-96 h-96 bg-ai-cyan rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+      <div className="absolute bottom-20 left-20 w-96 h-96 bg-ai-purple rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
 
       <ToastContainer />
       <Sidebar />
 
       <main className="flex-1 ml-64 p-0 relative z-10">
-        {/* Modern Hero Header with Animated Gradient */}
-        <div className="relative bg-gradient-to-br from-purple-600 via-pink-600 to-red-500 text-white px-10 py-16 overflow-hidden">
-          {/* Animated Background Pattern */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 3px 3px, white 1px, transparent 0)`,
-              backgroundSize: '50px 50px'
-            }}></div>
-          </div>
-          
+        {/* Modern Hero Header with Glass Effect */}
+        <div className="relative glass rounded-3xl mx-10 mt-10 mb-10 px-10 py-16 overflow-hidden shadow-glass">
           <div className="relative z-10">
             <div className="flex items-center gap-6 mb-8">
-              <div className="p-4 bg-white/20 backdrop-blur-xl rounded-2xl border border-white/30">
+              <div className="p-4 btn-gradient rounded-2xl shadow-lg">
                 <User2 size={40} className="text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold mb-2">Hello, {username || "User"}! 👋</h1>
-                <p className="text-white/90 text-base">Your personal presentation coaching hub</p>
+                <h1 className="text-4xl font-bold mb-2 text-slate-800">Hello, {username || "User"}! 👋</h1>
+                <p className="text-slate-600 text-base">Your personal presentation coaching hub</p>
               </div>
             </div>
 
             {/* Enhanced Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="bg-white/15 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl hover:bg-white/20 transition-all transform hover:scale-105">
+              <div className="glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all transform hover:scale-105">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 bg-white/20 rounded-xl">
+                  <div className="p-3 btn-gradient rounded-xl shadow-lg">
                     <Video className="text-white" size={24} />
                   </div>
-                  <TrendingUp className="text-green-300" size={20} />
+                  <TrendingUp className="text-green-500" size={20} />
                 </div>
-                <p className="text-white/70 text-sm font-medium mb-1">Total Videos</p>
-                <p className="text-3xl font-bold">{allVideos.length}</p>
+                <p className="text-slate-600 text-sm font-medium mb-1">Total Videos</p>
+                <p className="text-3xl font-bold text-slate-800">{allVideos.length}</p>
               </div>
               
-              <div className="bg-white/15 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl hover:bg-white/20 transition-all transform hover:scale-105">
+              <div className="glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all transform hover:scale-105">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 bg-white/20 rounded-xl">
+                  <div className="p-3 btn-gradient rounded-xl shadow-lg">
                     <Clock className="text-white" size={24} />
                   </div>
-                  <Sparkles className="text-yellow-300" size={20} />
+                  <Sparkles className="text-yellow-500" size={20} />
                 </div>
-                <p className="text-white/70 text-sm font-medium mb-1">Recent Activity</p>
-                <p className="text-2xl font-bold">
+                <p className="text-slate-600 text-sm font-medium mb-1">Recent Activity</p>
+                <p className="text-2xl font-bold text-slate-800">
                   {allVideos?.[0]?.start_time ? new Date(allVideos[0].start_time).toLocaleDateString() : "—"}
                 </p>
               </div>
               
-              <div className="bg-white/15 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl hover:bg-white/20 transition-all transform hover:scale-105">
+              <div className="glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all transform hover:scale-105">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 bg-white/20 rounded-xl">
+                  <div className="p-3 btn-gradient rounded-xl shadow-lg">
                     <Brain className="text-white" size={24} />
                   </div>
-                  <BarChart2 className="text-blue-300" size={20} />
+                  <BarChart2 className="text-blue-500" size={20} />
                 </div>
-                <p className="text-white/70 text-sm font-medium mb-1">Ready for Analysis</p>
-                <p className="text-3xl font-bold">{allVideos.filter(v => !v.feedback).length}</p>
+                <p className="text-slate-600 text-sm font-medium mb-1">Ready for Analysis</p>
+                <p className="text-3xl font-bold text-slate-800">{allVideos.filter(v => !v.feedback).length}</p>
               </div>
             </div>
           </div>
@@ -189,22 +181,22 @@ export default function Dashboard() {
           {/* Quick Actions with Modern Cards */}
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-1 w-12 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full"></div>
-              <h2 className="text-2xl font-bold text-white">Quick Actions</h2>
+              <div className="h-1 w-12 bg-gradient-ai rounded-full"></div>
+              <h2 className="text-2xl font-bold text-slate-800">Quick Actions</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* New Session Card */}
-              <div className="group bg-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 hover:border-indigo-300 transform hover:-translate-y-1">
+              <div className="group glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <div className="flex flex-col items-center text-center">
-                  <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                  <div className="p-4 btn-gradient rounded-2xl mb-4 group-hover:scale-110 transition-transform shadow-lg">
                     <Upload className="text-white" size={32} />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">New Session</h3>
-                  <p className="text-white/70 text-sm mb-4">Start recording your presentation</p>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">New Session</h3>
+                  <p className="text-slate-600 text-sm mb-4">Start recording your presentation</p>
                   <button
                     onClick={() => window.location.href = "/session"}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
+                    className="w-full btn-gradient text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
                   >
                     Start Now
                   </button>
@@ -212,16 +204,16 @@ export default function Dashboard() {
               </div>
 
               {/* Results Dashboard Card */}
-              <div className="group bg-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 hover:border-purple-300 transform hover:-translate-y-1">
+              <div className="group glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <div className="flex flex-col items-center text-center">
-                  <div className="p-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                  <div className="p-4 btn-gradient rounded-2xl mb-4 group-hover:scale-110 transition-transform shadow-lg">
                     <BarChart2 className="text-white" size={32} />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">Results</h3>
-                  <p className="text-white/70 text-sm mb-4">View performance insights</p>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Results</h3>
+                  <p className="text-slate-600 text-sm mb-4">View performance insights</p>
                   <button
                     onClick={(e) => e.preventDefault()}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
+                    className="w-full btn-gradient text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
                   >
                     View Results
                   </button>
@@ -229,16 +221,16 @@ export default function Dashboard() {
               </div>
 
               {/* Feedback Report Card */}
-              <div className="group bg-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 hover:border-green-300 transform hover:-translate-y-1">
+              <div className="group glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <div className="flex flex-col items-center text-center">
-                  <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                  <div className="p-4 btn-gradient rounded-2xl mb-4 group-hover:scale-110 transition-transform shadow-lg">
                     <FileText className="text-white" size={32} />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">Feedback</h3>
-                  <p className="text-white/70 text-sm mb-4">Explore recommendations</p>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Feedback</h3>
+                  <p className="text-slate-600 text-sm mb-4">Explore recommendations</p>
                   <button
                     onClick={(e) => e.preventDefault()}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
+                    className="w-full btn-gradient text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
                   >
                     Open Report
                   </button>
@@ -246,16 +238,16 @@ export default function Dashboard() {
               </div>
 
               {/* Profile Card */}
-              <div className="group bg-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 hover:border-orange-300 transform hover:-translate-y-1">
+              <div className="group glass rounded-2xl p-6 shadow-glass hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <div className="flex flex-col items-center text-center">
-                  <div className="p-4 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+                  <div className="p-4 btn-gradient rounded-2xl mb-4 group-hover:scale-110 transition-transform shadow-lg">
                     <User2 className="text-white" size={32} />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">Profile</h3>
-                  <p className="text-white/70 text-sm mb-4">Manage your account</p>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Profile</h3>
+                  <p className="text-slate-600 text-sm mb-4">Manage your account</p>
                   <button
                     onClick={() => window.location.href = "/profile"}
-                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
+                    className="w-full btn-gradient text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
                   >
                     View Profile
                   </button>
@@ -268,12 +260,12 @@ export default function Dashboard() {
           <div className="mt-12">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="h-1 w-12 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full"></div>
-                <h2 className="text-2xl font-bold text-white">Recent Videos</h2>
+                <div className="h-1 w-12 bg-gradient-ai rounded-full"></div>
+                <h2 className="text-2xl font-bold text-slate-800">Recent Videos</h2>
               </div>
               <button
                 onClick={() => (window.location.href = "/my-videos")}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-2.5 px-6 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                className="btn-gradient text-white py-2.5 px-6 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2"
               >
                 <Video size={18} />
                 View All
@@ -282,19 +274,19 @@ export default function Dashboard() {
 
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
               </div>
             ) : error ? (
-              <div className="bg-red-500/20 backdrop-blur-xl border border-red-300/50 rounded-xl p-6 text-center">
-                <p className="text-red-200">{error}</p>
+              <div className="glass border-2 border-red-300/50 rounded-xl p-6 text-center">
+                <p className="text-red-600 font-medium">{error}</p>
               </div>
             ) : videos.length === 0 ? (
-              <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-12 text-center shadow-lg border border-white/20">
-                <div className="inline-flex p-4 bg-white/20 rounded-full mb-4">
+              <div className="glass rounded-2xl p-12 text-center shadow-glass">
+                <div className="inline-flex p-4 btn-gradient rounded-full mb-4 shadow-lg">
                   <Video className="text-white" size={48} />
                 </div>
-                <p className="text-white text-lg font-medium">No videos yet</p>
-                <p className="text-white/70 text-sm mt-2">Start a session to record your first video</p>
+                <p className="text-slate-800 text-lg font-medium">No videos yet</p>
+                <p className="text-slate-600 text-sm mt-2">Start a session to record your first video</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -302,7 +294,7 @@ export default function Dashboard() {
                   const fileName = v?.video_path ? String(v.video_path).split(/[\\/]/).pop() : "";
                   const src = fileName ? `http://localhost:5000/uploads/${encodeURIComponent(fileName)}` : "";
                   return (
-                    <div key={idx} className="group bg-white/10 backdrop-blur-xl rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 transform hover:-translate-y-1">
+                    <div key={idx} className="group glass rounded-2xl overflow-hidden shadow-glass hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                       <div className="relative w-full h-64 bg-black overflow-hidden">
                         {src ? (
                           <video
@@ -320,25 +312,25 @@ export default function Dashboard() {
                             <Video size={48} />
                           </div>
                         )}
-                        <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
+                        <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
                           {v?.start_time ? new Date(v.start_time).toLocaleDateString() : "—"}
                         </div>
                       </div>
                       <div className="p-5">
-                        <div className="flex items-center justify-between text-xs text-white/70 mb-4">
+                        <div className="flex items-center justify-between text-xs text-slate-600 mb-4">
                           <div className="flex items-center gap-1">
                             <Clock size={14} />
                             <span>{v?.start_time ? new Date(v.start_time).toLocaleTimeString() : "—"}</span>
                           </div>
                           {v.feedback && (
-                            <span className="px-2 py-1 bg-green-500/30 text-green-200 rounded-full text-xs font-medium border border-green-400/50">
+                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium border border-green-300">
                               Analyzed
                             </span>
                           )}
                         </div>
                         <button
                           onClick={() => handleAnalysis(v._id, v.video_path)}
-                          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                          className="w-full btn-gradient text-white py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                         >
                           <Brain size={18} />
                           Analyze Video
