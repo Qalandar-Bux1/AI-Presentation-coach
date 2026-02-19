@@ -1,1 +1,39 @@
+# Environment variables
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Uploads - video files
+uploads/*.mp4
+uploads/*.webm
+uploads/*.avi
+uploads/*.mov
+uploads/*.mkv
+uploads/*.flv
+
+# Keep uploads directory
+!uploads/.gitkeep
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
