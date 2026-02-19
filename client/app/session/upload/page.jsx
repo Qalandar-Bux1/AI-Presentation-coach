@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function UploadPage() {
   const [file, setFile] = useState(null);
+  const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const router = useRouter();
@@ -19,12 +20,12 @@ export default function UploadPage() {
     const selected = e.target.files?.[0];
     if (!selected) return;
 
-    if (selected.type !== "video/mp4") {
-      toast.error("Only MP4 files are allowed.");
+    if (selected.type !== "video/mp4" && selected.type !== "video/webm") {
+      toast.error("Only MP4 and WebM files are allowed.");
       return;
     }
-    if (selected.size > 50 * 1024 * 1024) {
-      toast.error("Maximum size allowed is 50 MB.");
+    if (selected.size > 100 * 1024 * 1024) { // Increased to 100MB for flexibility
+      toast.error("Maximum size allowed is 100 MB.");
       return;
     }
 
@@ -44,6 +45,9 @@ export default function UploadPage() {
 
       const form = new FormData();
       form.append("file", file);
+      if (title.trim()) {
+        form.append("title", title.trim());
+      }
 
       const xhr = new XMLHttpRequest();
       xhr.open("POST", "http://localhost:5000/session/upload");
@@ -141,7 +145,7 @@ export default function UploadPage() {
               </div>
             )}
 
-            <input type="file" ref={fileInputRef} accept="video/mp4" className="hidden" onChange={onFileChange} />
+            <input type="file" ref={fileInputRef} accept="video/mp4,video/webm" className="hidden" onChange={onFileChange} />
 
             {loading && (
               <div className="w-full mb-6">
@@ -153,8 +157,19 @@ export default function UploadPage() {
             )}
 
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Video Title (optional)</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g., My Presentation - January 2024"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-ai-blue glass"
+                  disabled={loading}
+                />
+              </div>
               <button onClick={openPicker} disabled={loading} className="w-full glass px-8 py-4 rounded-xl flex items-center justify-center gap-3">
-                <Upload size={20} /> {file ? "Choose Another File" : "Choose MP4 File"}
+                <Upload size={20} /> {file ? "Choose Another File" : "Choose Video File"}
               </button>
               <button onClick={handleSubmit} disabled={loading || !file} className="w-full btn-gradient text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-lg disabled:opacity-40 disabled:cursor-not-allowed">
                 {loading ? <div className="animate-spin h-5 w-5 border-b-2 border-white rounded-full"></div> : <><Sparkles size={20} /> Start AI Analysis</>}

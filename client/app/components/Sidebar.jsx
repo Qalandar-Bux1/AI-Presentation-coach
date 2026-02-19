@@ -15,64 +15,60 @@ export default function Sidebar() {
 
   const menu = [
     { icon: Home, href: "/dashboard", label: "Home", disabled: false },
-    { icon: Video, href: "/session", label: "Session", disabled: false },
+    { icon: Video, href: "/session", label: "Presentation Hub", disabled: false },
     { icon: Video, href: "/my-videos", label: "My Videos", disabled: false },
-    { icon: BarChart2, href: "#", label: "Results", disabled: true },
-    { icon: FileText, href: "#", label: "Reports", disabled: true },
+    { icon: BarChart2, href: "/results", label: "Results", disabled: false },
+    { icon: FileText, href: "/reports", label: "Feedback", disabled: false },
     { icon: User2, href: "/profile", label: "Profile", disabled: false },
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 glass border-r border-primary-200/30 shadow-glass flex flex-col z-40">
+    <aside className="fixed left-0 top-0 h-full w-64 glass shadow-glass flex flex-col z-40">
       {/* Gradient Accent Line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-ai"></div>
+      <div className="absolute top-0 left-0 right-0 h-1 btn-gradient"></div>
 
       {/* Logo Section */}
-      <div className="px-6 py-6">
+      <div className="px-5 py-5 border-b border-white/20">
         <Link href="/dashboard">
           <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative p-3 btn-gradient rounded-2xl group-hover:scale-110 transition-all duration-300 shadow-lg group-hover:glow-cyan">
-              <img src="/logo1.png" alt="logo" className="w-10 h-10 relative z-10" />
+            <div className="relative p-2.5 btn-gradient rounded-xl group-hover:scale-105 transition-transform duration-200 shadow-glass">
+              <img src="/logo1.png" alt="logo" className="w-9 h-9 relative z-10" />
             </div>
             <div>
-              <span className="text-xl font-bold text-gradient">
+              <span className="text-lg font-bold text-gradient">
                 AI Coach
               </span>
-              <p className="text-xs text-slate-600 group-hover:text-slate-700 transition-colors duration-300">Presentation Mastery</p>
+              <p className="text-[11px] text-slate-500">Presentation Mastery</p>
             </div>
           </div>
         </Link>
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 px-4 overflow-y-auto">
-        <div className="flex flex-col gap-2">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <div className="flex flex-col gap-1.5">
           {menu.map((item, index) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== "/dashboard");
 
             return (
-              <Link key={index} href={item.href}>
+              <Link key={index} href={item.href} prefetch={item.href === "/results" || item.href === "/reports" ? false : undefined}>
                 <div
-                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium cursor-pointer transition-all duration-200 rounded-xl
-                    ${
-                      isActive
-                        ? "btn-gradient text-white shadow-lg glow-cyan"
-                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                  className={`flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium cursor-pointer transition-all duration-200 rounded-xl
+                    ${isActive
+                      ? "btn-gradient text-white shadow-glass"
+                      : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                     }
                     ${item.disabled ? "opacity-40 cursor-not-allowed" : ""}
                   `}
                 >
-                  {isActive && (
-                    <div className="absolute left-0 w-1 h-8 bg-gradient-ai rounded-r-full"></div>
-                  )}
-                  <Icon 
-                    size={20} 
+                  <Icon
+                    size={18}
                     className={isActive ? "text-white" : "text-slate-500"}
                   />
                   <span className="flex-1">{item.label}</span>
                   {item.disabled && (
-                    <span className="text-xs bg-primary-100 px-2 py-0.5 rounded-full text-primary-600">Soon</span>
+                    <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">Soon</span>
                   )}
                 </div>
               </Link>
@@ -82,7 +78,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Logout Button */}
-      <div className="px-4 py-6">
+      <div className="px-3 py-4 border-t border-white/20">
         <button
           onClick={() => {
             localStorage.removeItem("token");
@@ -90,7 +86,7 @@ export default function Sidebar() {
             localStorage.removeItem("userId");
             window.location.href = "/";
           }}
-          className="w-full flex items-center justify-center gap-2.5 px-5 py-3 text-sm font-semibold text-white btn-gradient rounded-xl transition-all duration-300 shadow-lg transform hover:scale-[1.02]"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white btn-gradient rounded-xl transition-all duration-200 shadow-glass hover:shadow-xl transform hover:scale-[1.01]"
         >
           <LogOut size={16} />
           <span>Logout</span>

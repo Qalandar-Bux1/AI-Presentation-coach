@@ -22,6 +22,7 @@ const RecordPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [cameraError, setCameraError] = useState(null);
   const [startTime, setStartTime] = useState(null);
+  const [title, setTitle] = useState("");
   const animationFrameRef = useRef(null);
 
   useEffect(() => {
@@ -34,14 +35,14 @@ const RecordPage = () => {
           videoRef.current.srcObject = userStream;
           videoRef.current.onloadedmetadata = () => videoRef.current.play();
         }
-        
+
         // Setup canvas for flipped video processing
         const setupCanvas = () => {
           if (canvasRef.current && videoRef.current) {
             const canvas = canvasRef.current;
             const video = videoRef.current;
             const ctx = canvas.getContext('2d');
-            
+
             // Set canvas size to match video
             const updateCanvas = () => {
               if (video.videoWidth && video.videoHeight && video.readyState >= 2) {
@@ -49,7 +50,7 @@ const RecordPage = () => {
                   canvas.width = video.videoWidth;
                   canvas.height = video.videoHeight;
                 }
-                
+
                 // Draw flipped video to canvas
                 ctx.save();
                 ctx.translate(canvas.width, 0);
@@ -57,10 +58,10 @@ const RecordPage = () => {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 ctx.restore();
               }
-              
+
               animationFrameRef.current = requestAnimationFrame(updateCanvas);
             };
-            
+
             // Start updating canvas when video is ready
             if (video.readyState >= 2) {
               updateCanvas();
@@ -71,10 +72,10 @@ const RecordPage = () => {
             }
           }
         };
-        
+
         // Setup canvas after a short delay to ensure video is ready
         setTimeout(setupCanvas, 100);
-        
+
         setCameraError(null);
       } catch (err) {
         console.error("Error accessing media devices:", err);
@@ -109,7 +110,7 @@ const RecordPage = () => {
     try {
       // Use canvas stream for recording (flipped video)
       let recordingStream = stream;
-      
+
       if (canvasRef.current) {
         const canvasStream = canvasRef.current.captureStream(30); // 30 fps
         // Combine canvas video with original audio
@@ -119,7 +120,7 @@ const RecordPage = () => {
         });
         recordingStream = canvasStream;
       }
-      
+
       const mediaRecorder = new MediaRecorder(recordingStream, { mimeType: "video/webm; codecs=vp9" });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -177,7 +178,7 @@ const RecordPage = () => {
         return;
       }
       const blob = new Blob(finalChunks, { type: "video/webm" });
-      
+
       // Save to device storage (IndexedDB)
       await saveVideo({
         blob,
@@ -185,7 +186,7 @@ const RecordPage = () => {
         end_time: new Date().toISOString(),
         name: `recording-${new Date().toISOString()}.webm`,
       });
-      
+
       // Upload to server so it appears in My Videos (but don't trigger analysis)
       const token = localStorage.getItem("token") || "";
       if (token) {
@@ -193,6 +194,9 @@ const RecordPage = () => {
         form.append("file", blob, `recording-${Date.now()}.webm`);
         form.append("start_time", startTime?.toISOString() || new Date().toISOString());
         form.append("end_time", new Date().toISOString());
+        if (title.trim()) {
+          form.append("title", title.trim());
+        }
 
         try {
           const res = await fetch("http://localhost:5000/session/upload", {
@@ -231,7 +235,7 @@ const RecordPage = () => {
         return;
       }
       const blob = new Blob(finalChunks, { type: "video/webm" });
-      
+
       // Save to device storage (IndexedDB)
       await saveVideo({
         blob,
@@ -239,7 +243,7 @@ const RecordPage = () => {
         end_time: new Date().toISOString(),
         name: `recording-${new Date().toISOString()}.webm`,
       });
-      
+
       // Upload to server so it appears in My Videos
       const token = localStorage.getItem("token") || "";
       if (token) {
@@ -247,50 +251,44 @@ const RecordPage = () => {
         form.append("file", blob, `recording-${Date.now()}.webm`);
         form.append("start_time", startTime?.toISOString() || new Date().toISOString());
         form.append("end_time", new Date().toISOString());
-
-        try {
-          const res = await fetch("http://localhost:5000/session/upload", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-            body: form,
-          });
-          
-          if (!res.ok) {
-            const text = await res.text();
-            let errorMsg = "Upload failed";
-            try {
-              const data = JSON.parse(text);
-              errorMsg = data?.error || errorMsg;
-            } catch {}
-            throw new Error(errorMsg);
-          }
-          
-          const data = await res.json();
-          toast.success("✅ Video saved and downloaded! Check My Videos.");
-          // Redirect to My Videos so user can see the updated list
-          setTimeout(() => {
-            router.push("/my-videos");
-          }, 1000);
-        } catch (uploadError) {
-          console.error("Upload error:", uploadError);
-          // Check if it's a connection error
-          if (uploadError.message.includes("Failed to fetch") || uploadError.message.includes("ERR_CONNECTION_REFUSED")) {
-            toast.warning("✅ Video downloaded and saved to device. Backend server is not running - video will appear in My Videos after you start the server and upload it.");
-          } else {
-            toast.warning("✅ Video downloaded and saved to device, but upload failed: " + uploadError.message);
-          }
+        if (title.trim()) {
+          form.append("title", title.trim());
         }
+
+        // Upload in background, don't block download
+        fetch("http://localhost:5000/session/upload", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: form,
+        }).then(async (res) => {
+          if (res.ok) {
+            toast.success("✅ Video saved to My Videos!");
+            // Redirect after a short delay
+            setTimeout(() => {
+              router.push("/my-videos");
+            }, 1000);
+          } else {
+            console.error("Upload failed in background");
+            toast.warning("✅ Video downloaded, but upload to server failed.");
+          }
+        }).catch(err => {
+          console.error("Upload error:", err);
+          toast.warning("✅ Video downloaded, but upload to server failed.");
+        });
       } else {
-        toast.success("✅ Video downloaded and saved to device! Please log in to upload to My Videos.");
+        toast.success("✅ Video downloaded! Log in to save to cloud.");
       }
-      
-      // Download the file
+
+      // Direct download of the WebM file
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "recording.webm";
+      a.download = `recording-${new Date().toISOString().slice(0, 10)}.webm`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+
     } catch (e) {
       console.error("Download error:", e);
       toast.error("Failed to download video.");
@@ -349,19 +347,34 @@ const RecordPage = () => {
       </div>
 
       {recordedChunks.length > 0 && !isRecording && (
-        <div className="absolute bottom-24 flex items-center justify-center gap-6 w-full">
-          <button
-            onClick={downloadRecording}
-            className="bg-gradient-to-r from-[#3ABDF8] to-[#818CF8] text-white px-5 py-2 rounded-lg hover:opacity-90 shadow-md transition-all"
-          >
-            <Download size={22} />
-          </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-gradient-to-r from-[#3ABDF8] to-[#818CF8] text-white px-5 py-2 rounded-lg hover:opacity-90 shadow-md transition-all"
-          >
-            <Eye size={22} />
-          </button>
+        <div className="absolute bottom-24 flex flex-col items-center gap-4 w-full px-4">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Video Title (optional)"
+            className="w-full max-w-md px-4 py-2 rounded-lg bg-[#1E293B]/80 border border-[#334155] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3ABDF8]"
+          />
+          <div className="flex items-center justify-center gap-6">
+            <button
+              onClick={saveToDevice}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-5 py-2 rounded-lg hover:opacity-90 shadow-md transition-all"
+            >
+              Save
+            </button>
+            <button
+              onClick={downloadRecording}
+              className="bg-gradient-to-r from-[#3ABDF8] to-[#818CF8] text-white px-5 py-2 rounded-lg hover:opacity-90 shadow-md transition-all"
+            >
+              <Download size={22} />
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-gradient-to-r from-[#3ABDF8] to-[#818CF8] text-white px-5 py-2 rounded-lg hover:opacity-90 shadow-md transition-all"
+            >
+              <Eye size={22} />
+            </button>
+          </div>
         </div>
       )}
 

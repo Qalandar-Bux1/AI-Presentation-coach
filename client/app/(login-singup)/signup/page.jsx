@@ -26,10 +26,14 @@ export default function SignUp() {
   const strongPasswordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
 
+  // *** Phone validation rule ***
+  const phoneRegex = /^[+]?[0-9]{10,15}$/;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
+    // Basic validations
     if (!credentials.name.trim()) return setError("Please enter your full name");
     if (!credentials.email.trim()) return setError("Please enter your email address");
     if (!credentials.password.trim()) return setError("Please enter a password");
@@ -48,6 +52,12 @@ export default function SignUp() {
       return setError("Please enter your profession");
     }
 
+    // *** PHONE NUMBER VALIDATION ***
+    if (credentials.phone.trim() && !phoneRegex.test(credentials.phone)) {
+      return setError("Please enter a valid phone number (10–15 digits, numbers only).");
+    }
+
+    // Sending data to backend
     try {
       setLoading(true);
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -211,8 +221,13 @@ export default function SignUp() {
                 type="tel"
                 name="phone"
                 className="w-full box-border px-4 py-3 rounded-xl border border-primary-200/50 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition bg-white/80 backdrop-blur-sm text-slate-800 placeholder:text-slate-400"
-                placeholder="+1 555 000 0000"
-                onChange={onChange}
+                placeholder="+92 300 1234567"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^[0-9+]*$/.test(value)) {
+                    onChange(e);
+                  }
+                }}
                 value={credentials.phone}
               />
             </div>
