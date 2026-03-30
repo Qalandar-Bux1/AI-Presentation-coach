@@ -23,30 +23,26 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 glass shadow-glass flex flex-col z-40">
-      {/* Gradient Accent Line */}
-      <div className="absolute top-0 left-0 right-0 h-1 btn-gradient"></div>
+    <aside className="fixed left-0 top-0 h-screen w-64 glass-dark text-slate-100 flex flex-col z-40">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-400/80 to-cyan-200/60"></div>
 
-      {/* Logo Section */}
-      <div className="px-5 py-5 border-b border-white/20">
+      <div className="px-4 py-5 border-b border-white/10">
         <Link href="/dashboard">
           <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative p-2.5 btn-gradient rounded-xl group-hover:scale-105 transition-transform duration-200 shadow-glass">
+            <div className="relative p-2.5 rounded-xl bg-white/10 group-hover:bg-white/20 transition-colors duration-200">
               <img src="/logo1.png" alt="logo" className="w-9 h-9 relative z-10" />
             </div>
             <div>
-              <span className="text-lg font-bold text-gradient">
-                AI Coach
-              </span>
-              <p className="text-[11px] text-slate-500">Presentation Mastery</p>
+              <span className="text-base font-semibold text-white">AI Coach</span>
+              <p className="text-[10px] uppercase tracking-wide text-slate-300/80">Presentation Mastery</p>
             </div>
           </div>
         </Link>
       </div>
 
-      {/* Navigation Menu */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        <div className="flex flex-col gap-1.5">
+      <nav className="flex-1 flex flex-col min-h-0 px-3 py-6 overflow-y-auto">
+        <p className="px-3 pb-4 text-xs font-semibold uppercase tracking-widest text-slate-300/75">Menu</p>
+        <div className="flex flex-col gap-2.5 flex-1">
           {menu.map((item, index) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== "/dashboard");
@@ -54,21 +50,21 @@ export default function Sidebar() {
             return (
               <Link key={index} href={item.href} prefetch={item.href === "/results" || item.href === "/reports" ? false : undefined}>
                 <div
-                  className={`flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium cursor-pointer transition-all duration-200 rounded-xl
+                  className={`flex items-center gap-3.5 px-4 py-3.5 text-[15px] leading-snug font-semibold cursor-pointer transition-all duration-200 rounded-xl border
                     ${isActive
-                      ? "btn-gradient text-white shadow-glass"
-                      : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                      ? "bg-white/15 border-white/25 text-white shadow-md"
+                      : "border-transparent text-slate-200/90 hover:text-white hover:bg-white/10"
                     }
                     ${item.disabled ? "opacity-40 cursor-not-allowed" : ""}
                   `}
                 >
                   <Icon
-                    size={18}
-                    className={isActive ? "text-white" : "text-slate-500"}
+                    size={22}
+                    className={`shrink-0 ${isActive ? "text-white" : "text-slate-300"}`}
                   />
                   <span className="flex-1">{item.label}</span>
                   {item.disabled && (
-                    <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">Soon</span>
+                    <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-200">Soon</span>
                   )}
                 </div>
               </Link>
@@ -77,8 +73,7 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* Logout Button */}
-      <div className="px-3 py-4 border-t border-white/20">
+      <div className="px-3 py-5 border-t border-white/10 mt-auto">
         <button
           onClick={() => {
             localStorage.removeItem("token");
@@ -86,9 +81,9 @@ export default function Sidebar() {
             localStorage.removeItem("userId");
             window.location.href = "/";
           }}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white btn-gradient rounded-xl transition-all duration-200 shadow-glass hover:shadow-xl transform hover:scale-[1.01]"
+          className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 text-[15px] font-semibold text-white rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
         >
-          <LogOut size={16} />
+          <LogOut size={20} />
           <span>Logout</span>
         </button>
       </div>

@@ -1,66 +1,52 @@
-"use client";
 
-export default function ScoreRing({ score, size = 56, strokeWidth = 4 }) {
+"use client";
+import React from "react";
+
+export default function ScoreRing({ score, size = 100, strokeWidth = 8 }) {
+  const normalizedScore = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : null;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const safe = score != null ? Math.min(100, Math.max(0, score)) : null;
-  const offset =
-    safe != null
-      ? circumference - (safe / 100) * circumference
-      : circumference;
+  const offset = circumference - ((normalizedScore ?? 0) / 100) * circumference;
 
-  const color =
-    safe == null
-      ? "#94a3b8"
-      : safe >= 70
-        ? "#22c55e"
-        : safe >= 50
-          ? "#f59e0b"
-          : "#ef4444";
-  const track =
-    safe == null
-      ? "#f1f5f9"
-      : safe >= 70
-        ? "#dcfce7"
-        : safe >= 50
-          ? "#fef3c7"
-          : "#fee2e2";
+  const ringColorClass = (() => {
+    if (normalizedScore == null) return "text-slate-400";
+    if (normalizedScore >= 90) return "text-emerald-500";
+    if (normalizedScore >= 70) return "text-blue-500";
+    if (normalizedScore >= 50) return "text-amber-400";
+    return "text-red-500";
+  })();
 
   return (
-    <div
-      className="relative inline-flex items-center justify-center shrink-0"
-      style={{ width: size, height: size }}
-    >
-      <svg width={size} height={size} className="-rotate-90">
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={track}
+          stroke="currentColor"
+          className="text-slate-200"
           strokeWidth={strokeWidth}
-          fill="none"
+          fill="transparent"
         />
-        {safe != null && (
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={color}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-            style={{ transition: "stroke-dashoffset 1s ease-out" }}
-          />
-        )}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          className={ringColorClass}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 0.5s ease-out" }}
+        />
       </svg>
-      <span
-        className="absolute font-bold"
-        style={{ color, fontSize: size * 0.26 }}
-      >
-        {safe != null ? Math.round(safe) : "—"}
-      </span>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-[13px] font-bold text-slate-700">
+          {normalizedScore == null ? "—" : Math.round(normalizedScore)}
+        </span>
+      </div>
     </div>
   );
 }

@@ -3,144 +3,135 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom global styles */
 @layer base {
+  :root {
+    --bg-app: #eff4f7;
+    --bg-surface: #f7fafc;
+    --card: rgba(255, 255, 255, 0.9);
+    --card-border: rgba(15, 23, 42, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --brand-700: #0f3444;
+    --brand-800: #0b2734;
+    --brand-900: #061824;
+    --brand-accent: #3abdf8;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
   body {
-    @apply font-sans text-base;
-    background: linear-gradient(135deg, #E0F7FE 0%, #F0E9FF 25%, #FDF2F8 50%, #E0F7FE 75%, #F0E9FF 100%);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
+    @apply font-sans text-base antialiased;
+    background: radial-gradient(circle at 85% 8%, rgba(58, 189, 248, 0.12), transparent 24%),
+      linear-gradient(180deg, #f4f8fb 0%, var(--bg-app) 38%, #ecf2f6 100%);
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
-    position: relative;
-    color: #1E293B;
-  }
-
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    color: var(--text-primary);
   }
 
   body::before {
-    content: '';
+    content: "";
     position: fixed;
     inset: 0;
-    opacity: 0.4;
-    background-image: 
-      radial-gradient(circle at 20% 50%, rgba(0, 217, 255, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 40% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+    background-image: radial-gradient(circle at 10% 90%, rgba(15, 52, 68, 0.08), transparent 28%);
     pointer-events: none;
-    z-index: 0;
+    z-index: -2;
   }
 
   body::after {
-    content: '';
+    content: "";
     position: fixed;
-    top: -10rem;
-    right: -10rem;
-    width: 40rem;
-    height: 40rem;
-    background: radial-gradient(circle, rgba(0, 217, 255, 0.2) 0%, transparent 70%);
+    top: -8rem;
+    right: -8rem;
+    width: 26rem;
+    height: 26rem;
+    background: radial-gradient(circle, rgba(58, 189, 248, 0.15) 0%, transparent 70%);
     border-radius: 50%;
-    filter: blur(100px);
-    animation: float 20s ease-in-out infinite;
+    filter: blur(50px);
     pointer-events: none;
-    z-index: 0;
-  }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translate(0, 0) scale(1);
-      opacity: 0.2;
-    }
-    33% {
-      transform: translate(30px, -30px) scale(1.1);
-      opacity: 0.3;
-    }
-    66% {
-      transform: translate(-20px, 20px) scale(0.9);
-      opacity: 0.25;
-    }
+    z-index: -2;
   }
 }
 
-/* Glassmorphism utility classes */
 @layer utilities {
+  .bg-gradient-soft {
+    background: linear-gradient(180deg, #f4f8fb 0%, #eef4f7 100%);
+  }
+
+  .bg-ai-blue {
+    background-color: #3abdf8;
+  }
+
   .glass {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 
   .glass-dark {
-    background: rgba(30, 41, 59, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    background: linear-gradient(180deg, rgba(15, 52, 68, 0.96) 0%, rgba(6, 24, 36, 0.98) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 20px 45px rgba(2, 6, 23, 0.4);
   }
 
   .btn-gradient {
-    background: linear-gradient(135deg, #00D9FF 0%, #3B82F6 50%, #8B5CF6 100%);
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, var(--brand-700) 0%, var(--brand-900) 100%);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
   }
 
   .btn-gradient:hover {
-    background: linear-gradient(135deg, #00C7F8 0%, #2563EB 50%, #7C3AED 100%);
-    box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4), 0 0 20px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 10px 25px rgba(6, 24, 36, 0.28);
     transform: translateY(-2px);
   }
 
   .btn-gradient:active {
     transform: translateY(0);
-    box-shadow: 0 5px 15px rgba(0, 217, 255, 0.3);
+    box-shadow: 0 6px 14px rgba(6, 24, 36, 0.2);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, #00D9FF 0%, #3B82F6 50%, #8B5CF6 100%);
+    background: linear-gradient(135deg, #113a4b 0%, #0a2432 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .glow-cyan {
-    box-shadow: 0 0 20px rgba(0, 217, 255, 0.5), 0 0 40px rgba(0, 217, 255, 0.3);
+    box-shadow: 0 0 0 1px rgba(58, 189, 248, 0.35), 0 10px 30px rgba(58, 189, 248, 0.2);
   }
 
   .glow-purple {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 0 1px rgba(51, 65, 85, 0.22), 0 8px 24px rgba(15, 23, 42, 0.12);
   }
 
   .glow-pink {
-    box-shadow: 0 0 20px rgba(236, 72, 153, 0.5), 0 0 40px rgba(236, 72, 153, 0.3);
+    box-shadow: 0 0 0 1px rgba(58, 189, 248, 0.25), 0 8px 20px rgba(15, 23, 42, 0.1);
   }
 
   .shadow-glass {
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
   }
 
   .bg-gradient-ai {
-    background: linear-gradient(135deg, #00D9FF 0%, #3B82F6 50%, #8B5CF6 100%);
+    background: linear-gradient(135deg, var(--brand-700) 0%, var(--brand-900) 100%);
   }
 
   .bg-gradient-ai-reverse {
-    background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #00D9FF 100%);
+    background: linear-gradient(135deg, var(--brand-900) 0%, var(--brand-700) 100%);
   }
 
   .bg-ai-cyan {
-    background-color: #00D9FF;
+    background-color: #3abdf8;
   }
 
   .bg-ai-purple {
-    background-color: #8B5CF6;
+    background-color: #1f4959;
   }
 
-  /* Accordion / fade-in animation */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }
     to { opacity: 1; transform: translateY(0); }

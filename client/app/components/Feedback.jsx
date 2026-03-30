@@ -17,14 +17,38 @@ export default function Feedback({ report, compact = false }) {
   if (!report) return null;
 
   const feedback = report.feedback || {};
-  const strengths = feedback.strengths || [];
-  const improvements = feedback.improvements || [];
-  const overallAssessment = feedback.overall_assessment || "";
+  const strengths = Array.isArray(feedback.strengths) ? feedback.strengths : [];
+  const improvements = Array.isArray(feedback.improvements) ? feedback.improvements : [];
+  const overallAssessment =
+    feedback.overall_assessment ||
+    feedback.summary ||
+    feedback.voice ||
+    "";
 
   const voice = report.scores?.breakdown?.voice_delivery;
   const content = report.scores?.breakdown?.content_quality;
   const confidence = report.scores?.breakdown?.confidence_body_language;
   const engagement = report.scores?.breakdown?.engagement;
+
+  const legacyFeedbackItems = [
+    { label: "Voice Delivery", text: feedback.voice, icon: Volume2, tone: "#2563eb", bg: "#eff6ff" },
+    { label: "Body Language", text: feedback.expressions, icon: User, tone: "#7c3aed", bg: "#f5f3ff" },
+    { label: "Vocabulary", text: feedback.vocabulary, icon: FileText, tone: "#0f766e", bg: "#f0fdfa" },
+  ].filter((item) => item.text);
+
+  const iconColors = {
+    cyan: "#0891b2",
+    blue: "#2563eb",
+    purple: "#7c3aed",
+    pink: "#db2777",
+  };
+
+  const glassStyle = {
+    background: "rgba(255,255,255,0.88)",
+    border: "1px solid rgba(148,163,184,0.14)",
+    boxShadow: "0 18px 48px rgba(15, 23, 42, 0.08)",
+    backdropFilter: "blur(14px)",
+  };
 
   const lvl = (s) => {
     if (s == null) return { color: "#94a3b8" };
@@ -44,7 +68,7 @@ export default function Feedback({ report, compact = false }) {
     <div className="space-y-5">
       {/* ── Overall Assessment ── */}
       {overallAssessment && (
-        <div className={`glass rounded-xl shadow-sm ${compact ? "p-3" : "p-4"}`}>
+        <div className={`rounded-2xl ${compact ? "p-3" : "p-5"}`} style={glassStyle}>
           <div className="flex items-center gap-2 mb-2">
             <MessageSquare size={compact ? 14 : 16} className="text-blue-500" />
             <h3 className={`font-bold text-slate-800 ${compact ? "text-xs" : "text-sm"}`}>Overall Assessment</h3>
@@ -61,13 +85,38 @@ export default function Feedback({ report, compact = false }) {
             return (
               <div
                 key={cat.label}
-                className={`flex items-center gap-2 glass rounded-lg px-3 py-2 shadow-sm ${compact ? "text-xs" : "text-sm"}`}
+                className={`flex items-center gap-2 rounded-xl px-3 py-2.5 ${compact ? "text-xs" : "text-sm"}`}
+                style={glassStyle}
               >
-                <Icon size={compact ? 13 : 15} className={`text-${cat.accent}-500`} />
+                <div
+                  className="flex items-center justify-center rounded-lg"
+                  style={{ width: compact ? 24 : 28, height: compact ? 24 : 28, background: `${iconColors[cat.accent]}15` }}
+                >
+                  <Icon size={compact ? 13 : 15} style={{ color: iconColors[cat.accent] }} />
+                </div>
                 <span className="text-slate-600 font-medium">{cat.label}</span>
                 <span className="font-bold" style={{ color: lvl(cat.score).color }}>
                   {cat.score.toFixed(0)}
                 </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {legacyFeedbackItems.length > 0 && (
+        <div className={`grid grid-cols-1 md:grid-cols-3 ${compact ? "gap-3" : "gap-4"}`}>
+          {legacyFeedbackItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.label} className={`rounded-2xl ${compact ? "p-3" : "p-5"}`} style={glassStyle}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="rounded-xl p-2" style={{ background: item.bg }}>
+                    <Icon size={compact ? 16 : 18} style={{ color: item.tone }} />
+                  </div>
+                  <h3 className={`font-semibold text-slate-800 ${compact ? "text-sm" : "text-base"}`}>{item.label}</h3>
+                </div>
+                <p className={`text-slate-600 leading-relaxed ${compact ? "text-xs" : "text-sm"}`}>{item.text}</p>
               </div>
             );
           })}

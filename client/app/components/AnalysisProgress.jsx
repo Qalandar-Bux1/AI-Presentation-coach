@@ -66,7 +66,9 @@ export default function AnalysisProgress({ sessionId, onComplete, onError }) {
           return; // Stop processing, don't update other state
         }
 
-        setProgress(data.progress || 0);
+        const raw = data.progress;
+        const nextProgress = typeof raw === "number" ? raw : Number.parseFloat(raw);
+        setProgress(Number.isFinite(nextProgress) ? nextProgress : 0);
         const statusValue = data.status || "unknown";
         setStatus(statusValue === "processing" ? "running" : statusValue); // Map processing to running for UI
         setMessage(data.message || "");
@@ -119,11 +121,13 @@ export default function AnalysisProgress({ sessionId, onComplete, onError }) {
     return null;
   }
 
+  const pct = Math.min(100, Math.max(0, Number.isFinite(Number(progress)) ? Number(progress) : 0));
+
   return (
-    <div className="glass rounded-xl p-4 mb-4 shadow-glass border-l-4 border-primary-500">
+    <div className="glass rounded-xl p-4 mb-4 shadow-glass border-l-4 border-sky-500">
       <div className="flex items-center gap-3 mb-3">
         {status === "running" && (
-          <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
+          <Loader2 className="w-5 h-5 animate-spin text-sky-600" />
         )}
         {status.includes("completed") && (
           <CheckCircle className={`w-5 h-5 ${status === "completed_with_warning" ? "text-yellow-500" : "text-green-500"}`} />
@@ -140,18 +144,26 @@ export default function AnalysisProgress({ sessionId, onComplete, onError }) {
           </p>
           <p className="text-xs text-slate-600 mt-1">{message}</p>
         </div>
-        <span className="text-sm font-bold text-primary-600">{progress}%</span>
+        <span className="text-sm font-bold text-[#0f3444] tabular-nums">{Math.round(pct)}%</span>
       </div>
 
-      {/* Progress Bar */}
-      <div className="w-full bg-slate-200/80 rounded-full h-3 mb-2 overflow-hidden shadow-inner">
+      {/* Progress Bar — inline width + gradient so fill always matches % (Tailwind v4 theme quirks) */}
+      <div
+        className="relative w-full h-3 rounded-full bg-slate-200/90 mb-2 overflow-hidden shadow-inner"
+        role="progressbar"
+        aria-valuenow={Math.round(pct)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Analysis progress"
+      >
         <div
-          className="bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 h-3 rounded-full transition-all duration-500 ease-out shadow-sm"
-          style={{ 
-            width: `${progress}%`,
-            minWidth: progress > 0 ? '2%' : '0%'
+          className="h-full rounded-full transition-[width] duration-500 ease-out shadow-sm"
+          style={{
+            width: `${pct}%`,
+            minWidth: pct > 0 ? "3px" : "0",
+            background: "linear-gradient(90deg, #3abdf8 0%, #0284c7 45%, #0f3444 100%)",
           }}
-        ></div>
+        />
       </div>
 
       {/* Error Message */}
