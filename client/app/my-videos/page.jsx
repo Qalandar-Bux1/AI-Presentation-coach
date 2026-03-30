@@ -326,42 +326,41 @@ export default function MyVideosPage() {
       <main className="flex-1 ml-64 p-6">
         <ToastContainer />
 
-        {/* Header Section */}
-        <div className="glass rounded-2xl shadow-glass px-8 py-6 mb-6">
+        <div className="rounded-2xl shadow-glass px-5 lg:px-7 py-6 mb-5 text-white relative overflow-hidden" style={{ background: "linear-gradient(145deg, #113a4b 0%, #061824 100%)" }}>
+          <div className="absolute -top-16 -right-16 w-52 h-52 rounded-full bg-sky-300/20 blur-3xl" />
           <div className="flex items-center gap-4">
-            <div className="p-3 btn-gradient rounded-xl shadow-glass">
-              <Video size={28} className="text-white" />
+            <div className="p-2.5 rounded-xl bg-white/10 border border-white/20">
+              <Video size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-800">
+              <h1 className="text-2xl font-bold text-white">
                 My Videos
               </h1>
-              <p className="text-slate-600 text-sm">Manage and review all your recorded presentations</p>
+              <p className="text-slate-200 text-sm">Manage and review all your recorded presentations</p>
             </div>
           </div>
         </div>
 
-        {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="glass rounded-xl p-4 shadow-glass hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="p-2 btn-gradient rounded-xl shadow-sm">
-                <Video className="text-white" size={20} />
+          <div className="glass rounded-xl p-3 shadow-glass hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-lg bg-gradient-ai shadow-sm">
+                <Video className="text-white" size={16} />
               </div>
               <div className="h-2 w-2 bg-green-500 rounded-full"></div>
             </div>
-            <p className="text-slate-600 text-xs font-medium mb-0.5">Total Videos</p>
-            <p className="text-2xl font-bold text-slate-800">{videos.length}</p>
+            <p className="text-slate-600 text-xs font-medium mt-2">Total Videos</p>
+            <p className="text-xl font-bold text-slate-800">{videos.length}</p>
           </div>
-          <div className="glass rounded-xl p-4 shadow-glass hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="p-2 btn-gradient rounded-xl shadow-sm">
-                <Calendar className="text-white" size={20} />
+          <div className="glass rounded-xl p-3 shadow-glass hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-lg bg-gradient-ai shadow-sm">
+                <Calendar className="text-white" size={16} />
               </div>
               <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
             </div>
-            <p className="text-slate-600 text-xs font-medium mb-0.5">This Month</p>
-            <p className="text-2xl font-bold text-slate-800">
+            <p className="text-slate-600 text-xs font-medium mt-2">This Month</p>
+            <p className="text-xl font-bold text-slate-800">
               {videos.filter(v => {
                 const videoDate = new Date(v.start_time);
                 const now = new Date();
@@ -369,15 +368,15 @@ export default function MyVideosPage() {
               }).length}
             </p>
           </div>
-          <div className="glass rounded-xl p-4 shadow-glass hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="p-2 btn-gradient rounded-xl shadow-sm">
-                <Clock className="text-white" size={20} />
+          <div className="glass rounded-xl p-3 shadow-glass hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-lg bg-gradient-ai shadow-sm">
+                <Clock className="text-white" size={16} />
               </div>
               <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
             </div>
-            <p className="text-slate-600 text-xs font-medium mb-0.5">Recent</p>
-            <p className="text-lg font-bold text-slate-800">
+            <p className="text-slate-600 text-xs font-medium mt-2">Recent</p>
+            <p className="text-base font-bold text-slate-800">
               {videos.length > 0 ? new Date(videos[0].start_time).toLocaleDateString() : "—"}
             </p>
           </div>
@@ -480,7 +479,7 @@ export default function MyVideosPage() {
                         <div className="mb-3">
                           <AnalysisProgress
                             sessionId={v._id}
-                            onComplete={() => handleAnalysisComplete(v._id)}
+                            onComplete={handleAnalysisComplete}
                             onError={(error) => {
                               setAnalyzingSessions(prev => {
                                 const next = new Set(prev);

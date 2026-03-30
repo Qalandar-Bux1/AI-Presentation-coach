@@ -180,54 +180,56 @@ export default function Dashboard() {
       <ToastContainer />
       <Sidebar />
 
-      <main className="flex-1 ml-64 p-6">
+      <main className="flex-1 ml-64 p-6 lg:p-8">
         {/* Hero Header */}
-        <div className="glass rounded-2xl shadow-glass px-8 py-10 mb-6">
-          <div className="flex items-center gap-5 mb-6">
-            <div className="p-3 btn-gradient rounded-xl shadow-glass">
-              <User2 size={36} className="text-white" />
+        <div className="rounded-2xl shadow-glass px-5 lg:px-7 py-6 mb-6 text-white relative overflow-hidden" style={{ background: "linear-gradient(145deg, #113a4b 0%, #061824 100%)" }}>
+          <div className="absolute -top-16 -right-16 w-52 h-52 rounded-full bg-sky-300/20 blur-3xl" />
+          <div className="absolute -bottom-16 left-10 w-40 h-40 rounded-full bg-sky-200/10 blur-2xl" />
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-2.5 rounded-xl bg-white/10 border border-white/20">
+              <User2 size={28} className="text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-800">Hello, {username || "User"}! 👋</h1>
-              <p className="text-slate-600 text-sm">Your personal presentation coaching hub</p>
+              <h1 className="text-2xl font-bold text-white">Hello, {username || "User"}! 👋</h1>
+              <p className="text-slate-200 text-sm">Your personal AI presentation coaching hub</p>
             </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="glass rounded-xl p-4 shadow-glass hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 btn-gradient rounded-xl shadow-sm">
-                  <Video className="text-white" size={20} />
+            <div className="rounded-xl p-3 border border-white/15 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-lg bg-white/15">
+                  <Video className="text-white" size={16} />
                 </div>
-                <TrendingUp className="text-green-500" size={18} />
+                <TrendingUp className="text-emerald-300" size={18} />
               </div>
-              <p className="text-slate-600 text-xs font-medium mb-0.5">Total Videos</p>
-              <p className="text-2xl font-bold text-slate-800">{allVideos.length}</p>
+              <p className="text-slate-200 text-xs font-medium mt-2">Total Videos</p>
+              <p className="text-xl font-bold text-white leading-tight">{allVideos.length}</p>
             </div>
 
-            <div className="glass rounded-xl p-4 shadow-glass hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 btn-gradient rounded-xl shadow-sm">
-                  <Clock className="text-white" size={20} />
+            <div className="rounded-xl p-3 border border-white/15 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-lg bg-white/15">
+                  <Clock className="text-white" size={16} />
                 </div>
-                <Sparkles className="text-yellow-500" size={18} />
+                <Sparkles className="text-amber-300" size={18} />
               </div>
-              <p className="text-slate-600 text-xs font-medium mb-0.5">Recent Activity</p>
-              <p className="text-lg font-bold text-slate-800">
+              <p className="text-slate-200 text-xs font-medium mt-2">Recent Activity</p>
+              <p className="text-base font-bold text-white leading-tight">
                 {allVideos?.[0]?.start_time ? new Date(allVideos[0].start_time).toLocaleDateString() : "—"}
               </p>
             </div>
 
-            <div className="glass rounded-xl p-4 shadow-glass hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 btn-gradient rounded-xl shadow-sm">
-                  <Brain className="text-white" size={20} />
+            <div className="rounded-xl p-3 border border-white/15 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-lg bg-white/15">
+                  <Brain className="text-white" size={16} />
                 </div>
-                <BarChart2 className="text-blue-500" size={18} />
+                <BarChart2 className="text-sky-300" size={18} />
               </div>
-              <p className="text-slate-600 text-xs font-medium mb-0.5">Ready for Analysis</p>
-              <p className="text-2xl font-bold text-slate-800">{allVideos.filter(v => !v.feedback).length}</p>
+              <p className="text-slate-200 text-xs font-medium mt-2">Ready for Analysis</p>
+              <p className="text-xl font-bold text-white leading-tight">{allVideos.filter(v => !v.feedback).length}</p>
             </div>
           </div>
         </div>
@@ -263,7 +265,7 @@ export default function Dashboard() {
                 <h3 className="text-base font-bold text-slate-800 mb-1">Results</h3>
                 <p className="text-slate-600 text-xs mb-3">View performance insights</p>
                 <button
-                  onClick={(e) => e.preventDefault()}
+                  onClick={() => (window.location.href = "/results")}
                   className="w-full btn-gradient text-white py-2 rounded-xl text-sm font-medium transition-shadow shadow-sm hover:shadow-md"
                 >
                   View Results
@@ -280,7 +282,7 @@ export default function Dashboard() {
                 <h3 className="text-base font-bold text-slate-800 mb-1">Feedback</h3>
                 <p className="text-slate-600 text-xs mb-3">Explore recommendations</p>
                 <button
-                  onClick={(e) => e.preventDefault()}
+                  onClick={() => (window.location.href = "/reports")}
                   className="w-full btn-gradient text-white py-2 rounded-xl text-sm font-medium transition-shadow shadow-sm hover:shadow-md"
                 >
                   Open Report

@@ -70,18 +70,14 @@ export default function Login() {
 
   return (
     <section className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Animated Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-soft"></div>
-      
-      {/* Floating Gradient Orbs */}
-      <div className="absolute top-20 right-20 w-96 h-96 bg-ai-cyan rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-      <div className="absolute bottom-20 left-20 w-96 h-96 bg-ai-purple rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
-
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(17,58,75,0.14),transparent_30%),radial-gradient(circle_at_85%_20%,rgba(58,189,248,0.25),transparent_35%),linear-gradient(180deg,#eef4f8_0%,#dfe9f1_100%)] pointer-events-none" />
+      <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-sky-300/25 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-20 w-80 h-80 rounded-full bg-[#113a4b]/20 blur-3xl pointer-events-none" />
       <div className="w-full max-w-md relative z-10">
         {/* Logo Section */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-4">
-            <div className="p-3 btn-gradient rounded-2xl shadow-lg">
+            <div className="p-3 btn-gradient rounded-xl shadow-md">
               <img src="/logo1.png" alt="logo" className="h-10 w-10" />
             </div>
             <div className="text-left">
@@ -93,7 +89,10 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="glass rounded-3xl shadow-glass p-10 border border-primary-200/30 max-w-full overflow-hidden">
+        <div className="rounded-2xl shadow-glass p-8 border border-slate-200/70 max-w-full overflow-hidden relative bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(245,250,255,0.95)_100%)] backdrop-blur-sm">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#113a4b] to-[#061824]" />
+          <div className="absolute -top-20 -right-14 w-40 h-40 rounded-full bg-sky-200/30 blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-14 w-40 h-40 rounded-full bg-[#113a4b]/12 blur-2xl pointer-events-none" />
           <h1 className="text-3xl font-bold text-center mb-2">
             <span className="text-gradient">
               Welcome Back 👋

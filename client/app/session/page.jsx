@@ -1,83 +1,85 @@
 "use client";
-import Link from "next/link";
-import Sidebar from "../components/Sidebar";
-import { Video, Upload, Sparkles, ArrowRight } from "lucide-react";
 
-export default function SessionChoice() {
+import { useRouter } from "next/navigation";
+import Sidebar from "../components/Sidebar";
+import { Video, Upload, Camera } from "lucide-react";
+
+export default function SessionPage() {
+  const router = useRouter();
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-
-      {/* Main Section */}
-      <div className="flex-1 flex flex-col items-center justify-center ml-64 px-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="p-2 btn-gradient rounded-xl shadow-glass">
-              <Sparkles className="text-white" size={24} />
+      <main className="flex-1 ml-64 pb-8">
+        <div className="rounded-b-[28px] px-8 lg:px-10 py-10 text-white relative overflow-hidden" style={{ background: "linear-gradient(145deg, #113a4b 0%, #061824 100%)" }}>
+          <div className="absolute -top-20 right-0 w-64 h-64 rounded-full bg-sky-300/15 blur-3xl" />
+          <div className="relative max-w-5xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/15 bg-white/5 text-[11px] uppercase tracking-wider text-slate-200 mb-4">
+              Presentation Hub
             </div>
-            <h1 className="text-3xl font-bold text-gradient">
-              Start a New Presentation
-            </h1>
-          </div>
-          <p className="text-slate-600 text-sm max-w-2xl">
-            Choose how you'd like to begin your presentation coaching session
-          </p>
-        </div>
-
-        {/* Action Cards */}
-        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-4xl">
-          {/* Record Video Card */}
-          <Link
-            href="/session/record"
-            className="group flex-1 glass rounded-2xl shadow-glass hover:shadow-xl transition-all duration-300 p-6"
-          >
-            <div className="flex flex-col items-center text-center h-full justify-center">
-              <div className="p-3 btn-gradient rounded-xl mb-4 transition-all duration-300 shadow-glass">
-                <Video className="text-white" size={48} strokeWidth={1.5} />
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-slate-800">Record Video</h3>
-              <p className="text-slate-600 text-sm mb-4 max-w-xs">
-                Record a new presentation using your camera and microphone
-              </p>
-              <div className="flex items-center gap-2 text-slate-700 font-medium group-hover:gap-4 transition-all">
-                <span>Get Started</span>
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </Link>
-
-          {/* Upload Video Card */}
-          <Link
-            href="/session/upload"
-            className="group flex-1 glass rounded-2xl shadow-glass hover:shadow-xl transition-all duration-300 p-6"
-          >
-            <div className="flex flex-col items-center text-center h-full justify-center">
-              <div className="p-3 btn-gradient rounded-xl mb-4 transition-all duration-300 shadow-glass">
-                <Upload className="text-white" size={48} strokeWidth={1.5} />
-              </div>
-              <h3 className="text-xl font-bold mb-2 text-slate-800">Upload Video</h3>
-              <p className="text-slate-600 text-sm mb-4 max-w-xs">
-                Upload an existing video file for AI-powered analysis
-              </p>
-              <div className="flex items-center gap-2 text-slate-700 font-medium group-hover:gap-4 transition-all">
-                <span>Upload Now</span>
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </Link>
-        </div>
-
-        {/* Info Section */}
-        <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-xl shadow-glass">
-            <Sparkles size={18} className="text-yellow-500" />
-            <p className="text-slate-600 text-sm">
-              Both options support AI-powered feedback and analysis
+            <h1 className="text-4xl font-bold leading-tight mb-3">Start Your AI Coaching Session</h1>
+            <p className="text-slate-200 max-w-2xl">
+              Record or upload a presentation video and get instant AI-powered analysis on tone, eye contact, body language, and more.
             </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-200">
+              <span className="px-3 py-1 rounded-full border border-white/20 bg-white/10">Private & Secure</span>
+              <span className="px-3 py-1 rounded-full border border-white/20 bg-white/10">Detailed Score Report</span>
+            </div>
           </div>
         </div>
-      </div>
+
+        <div className="max-w-5xl mx-auto px-8 lg:px-10 -mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <button
+              onClick={() => router.push("/session/record")}
+              className="glass rounded-2xl p-7 text-left hover:shadow-xl hover:-translate-y-1 transition-all border-2 border-slate-100"
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-ai flex items-center justify-center mb-4">
+                <Camera className="text-white" size={22} />
+              </div>
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-2">Record</div>
+              <h2 className="text-xl font-semibold text-slate-800 mb-2">
+                Record Video
+              </h2>
+              <p className="text-slate-600 text-sm leading-6 mb-4">
+                Use your camera and microphone to record a live presentation. Get instant feedback as soon as you're done.
+              </p>
+              <ul className="text-xs text-slate-500 space-y-1 mb-5">
+                <li>• Use your webcam</li>
+                <li>• Real-time recording</li>
+                <li>• Instant AI analysis</li>
+              </ul>
+              <div className="w-full btn-gradient text-white rounded-lg py-2.5 text-sm font-semibold text-center">Start Recording</div>
+            </button>
+
+            <button
+              onClick={() => router.push("/session/upload")}
+              className="glass rounded-2xl p-7 text-left hover:shadow-xl hover:-translate-y-1 transition-all border-2 border-slate-100"
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-ai flex items-center justify-center mb-4">
+                <Upload className="text-white" size={22} />
+              </div>
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-2">File</div>
+              <h2 className="text-xl font-semibold text-slate-800 mb-2">
+                Upload Video
+              </h2>
+              <p className="text-slate-600 text-sm leading-6 mb-4">
+                Upload an existing presentation video from your device for a full AI coaching review.
+              </p>
+              <ul className="text-xs text-slate-500 space-y-1 mb-5">
+                <li>• Supports MP4 and WebM</li>
+                <li>• Up to 100MB</li>
+                <li>• Full analysis report</li>
+              </ul>
+              <div className="w-full btn-gradient text-white rounded-lg py-2.5 text-sm font-semibold text-center">Upload Now</div>
+            </button>
+          </div>
+
+          <div className="glass rounded-xl px-4 py-3 text-xs text-slate-600 text-center mt-4">
+            Both options include <span className="font-semibold text-slate-800">full AI analysis</span> - tone, eye contact, body language, confidence, and a detailed score report.
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
