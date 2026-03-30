@@ -76,7 +76,7 @@ export default function ResultsIndexPage() {
     return (
       <div className="flex min-h-screen relative overflow-hidden">
         <Sidebar />
-        <main className="flex-1 ml-64 p-10 relative z-10">
+        <main className="flex-1 ml-64 p-6 lg:p-7 relative z-10">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
               <Loader2 className="w-12 h-12 animate-spin text-primary-500 mx-auto mb-4" />
@@ -92,7 +92,7 @@ export default function ResultsIndexPage() {
     return (
       <div className="flex min-h-screen relative overflow-hidden">
         <Sidebar />
-        <main className="flex-1 ml-64 p-10 relative z-10">
+        <main className="flex-1 ml-64 p-6 lg:p-7 relative z-10">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="glass rounded-2xl p-8 max-w-md text-center shadow-glass">
               <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -115,7 +115,7 @@ export default function ResultsIndexPage() {
     return (
       <div className="flex min-h-screen relative overflow-hidden">
         <Sidebar />
-        <main className="flex-1 ml-64 p-10 relative z-10">
+        <main className="flex-1 ml-64 p-6 lg:p-7 relative z-10">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="glass rounded-2xl p-8 max-w-md text-center shadow-glass">
               <BarChart2 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
@@ -139,8 +139,8 @@ export default function ResultsIndexPage() {
       <ToastContainer />
       <Sidebar />
       
-      <main className="flex-1 ml-64 p-10 relative z-10">
-        <div className="mb-8">
+      <main className="flex-1 ml-64 p-6 lg:p-7 relative z-10">
+        <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="h-1 w-12 bg-gradient-ai rounded-full"></div>
             <h1 className="text-3xl font-bold text-slate-800">Analysis Results</h1>

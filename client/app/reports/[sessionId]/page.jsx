@@ -1,1074 +1,371 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Sidebar from "../../components/Sidebar";
-import ScoreRing from "../../components/ScoreRing";
-import "../../components/bg.css";
-import {
-  ArrowLeft, Loader2, AlertCircle, CheckCircle, Target,
-  TrendingUp, Volume2, FileText, User, Zap, Download,
-  MessageSquare, ChevronDown
-} from "lucide-react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Loader2, AlertCircle, ArrowLeft, Calendar, FileText, Download } from "lucide-react";
 
-/* ─── Helpers ────────────────────────────────────────────── */
-const lvl = (s) => {
-  if (s == null) return { label: "N/A", color: "#94a3b8" };
-  if (s >= 80) return { label: "Excellent", color: "#059669" };
-  if (s >= 70) return { label: "Good", color: "#16a34a" };
-  if (s >= 50) return { label: "Average", color: "#d97706" };
-  return { label: "Needs Work", color: "#dc2626" };
-};
+export default function ReportDetailsPage() {
+	const params = useParams();
+	const router = useRouter();
+	const sessionId = params?.sessionId;
 
-const gradeColor = (g) => {
-  if (!g) return { text: "text-slate-600", bg: "bg-slate-50 border-slate-200" };
-  if (g.startsWith("A") || g === "Excellent") return { text: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" };
-  if (g.startsWith("B") || g === "Good" || g === "Very Good") return { text: "text-blue-700", bg: "bg-blue-50 border-blue-200" };
-  if (g.startsWith("C") || g === "Fair") return { text: "text-amber-700", bg: "bg-amber-50 border-amber-200" };
-  return { text: "text-red-700", bg: "bg-red-50 border-red-200" };
-};
+	const [report, setReport] = useState(null);
+	const [session, setSession] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState("");
+	const [downloading, setDownloading] = useState(false);
+	const reportRef = useRef(null);
 
-/* ─── Main Component ─────────────────────────────────────── */
-export default function ReportsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const sessionId = params?.sessionId;
+	const escapeHtml = (value = "") =>
+		String(value)
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#39;");
 
-  const [report, setReport] = useState(null);
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showMetrics, setShowMetrics] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+	useEffect(() => {
+		if (!sessionId) {
+			setError("Session ID is required");
+			setLoading(false);
+			return;
+		}
 
-  /* ── Fetch (unchanged API logic) ────────────────────────── */
-  useEffect(() => {
-    if (!sessionId) { setError("Session ID is required"); setLoading(false); return; }
+		const fetchReport = async () => {
+			try {
+				const token = localStorage.getItem("token");
+				if (!token) {
+					setError("Please log in to view feedback");
+					setLoading(false);
+					return;
+				}
 
-    const fetchReport = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) { setError("Please log in to view reports"); setLoading(false); return; }
+				const res = await fetch(`http://localhost:5000/session/${sessionId}`, {
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+				});
 
-        let res;
-        try {
-          res = await fetch(`http://localhost:5000/session/${sessionId}`, {
-            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          });
-        } catch (fetchError) {
-          if (fetchError.message.includes("Failed to fetch") || fetchError.message.includes("ERR_CONNECTION")) {
-            throw new Error("Cannot connect to backend server. Please ensure the Flask server is running on http://localhost:5000");
-          }
-          throw fetchError;
-        }
+				if (!res.ok) {
+					const data = await res.json().catch(() => ({}));
+					throw new Error(data?.error || "Failed to fetch session");
+				}
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          let errorData;
-          try { errorData = JSON.parse(errorText); } catch { errorData = { error: `Server error: ${res.status} ${res.statusText}` }; }
-          throw new Error(errorData?.error || "Failed to fetch session");
-        }
+				const data = await res.json();
+				const sessionData = data.session;
+				setSession(sessionData);
 
-        const data = await res.json();
-        const sessionData = data.session;
-        setSession(sessionData);
+				if (sessionData.analysis_status === "processing") {
+					throw new Error("Analysis is still in progress. Please wait for it to complete.");
+				}
 
-        const analysisStatus = sessionData.analysis_status || "not_started";
-        if (analysisStatus === "processing") { setError("Analysis is still in progress. Please wait."); setLoading(false); return; }
-        if (analysisStatus === "failed") { setError(`Analysis failed: ${sessionData.analysis_error || "Unknown error"}`); setLoading(false); return; }
-        if (analysisStatus === "completed_with_warning") {
-          toast.warning(sessionData.warning_message || sessionData.analysis_report?.warning_message || "Analysis completed with limitations");
-        }
+				if (sessionData.analysis_status === "failed") {
+					throw new Error(sessionData.analysis_error || "Analysis failed for this session.");
+				}
 
-        if (!sessionData.analysis_report && !sessionData.feedback) { setError("Analysis report not found."); setLoading(false); return; }
+				if (sessionData.analysis_report) {
+					setReport(sessionData.analysis_report);
+				} else if (sessionData.feedback) {
+					setReport({
+						scores: {
+							final_score: sessionData.score || 0,
+							grade: sessionData.grade || "N/A",
+							breakdown: {
+								voice_delivery: { score: 0 },
+								content_quality: { score: 0 },
+								confidence_body_language: { score: 0 },
+								engagement: { score: 0 },
+							},
+						},
+						feedback: sessionData.feedback,
+					});
+				} else {
+					throw new Error("No feedback report found for this session.");
+				}
+			} catch (err) {
+				setError(err.message || "Failed to load feedback report");
+			} finally {
+				setLoading(false);
+			}
+		};
 
-        if (sessionData.analysis_report) {
-          setReport(sessionData.analysis_report);
-        } else if (sessionData.feedback) {
-          setReport({
-            scores: {
-              final_score: sessionData.score || 0,
-              grade: sessionData.grade || "N/A",
-              rating: sessionData.grade || "N/A",
-              breakdown: {
-                voice_delivery: { score: 0, weight: 0.30 },
-                content_quality: { score: 0, weight: 0.30 },
-                confidence_body_language: { score: 0, weight: 0.25 },
-                engagement: { score: 0, weight: 0.15 },
-              },
-            },
-            feedback: sessionData.feedback,
-            audio_analysis: {},
-            text_analysis: {},
-            video_analysis: {},
-          });
-        }
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching report:", err);
-        setError(err.message || "Failed to load analysis report");
-        toast.error(err.message || "Failed to load analysis report");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchReport();
-  }, [sessionId]);
+		fetchReport();
+	}, [sessionId]);
 
-  /* ── PDF Download ───────────────────────────────────────── */
-  const handleDownload = async () => {
-    const element = document.getElementById("report-pdf-content");
-    if (!element) return;
+	const handleDownload = async () => {
+		if (!reportRef.current || downloading) return;
 
-    setDownloading(true);
-    element.style.display = "block";
+		try {
+			setDownloading(true);
+			const html2pdfModule = await import("html2pdf.js");
+			const html2pdf = html2pdfModule.default || html2pdfModule;
+			const safeTitle = (session?.title || `feedback-${sessionId}`).replace(/[^a-z0-9-_]+/gi, "-").toLowerCase();
 
-    const opt = {
-      margin: [0.4, 0.5, 0.4, 0.5],
-      filename: `presentation_report_${sessionId}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-      jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-    };
+			const audio = report?.audio_analysis || {};
+			const video = report?.video_analysis || {};
+			const wpm = audio?.speaking_speed?.wpm;
+			const fillerPct = audio?.filler_words?.percentage;
+			const fillerTotal = audio?.filler_words?.total;
+			const facePresence = video?.face_presence?.percentage;
+			const gestureFreq = video?.gestures?.frequency_percentage;
 
-    try {
-      const html2pdfModule = await import("html2pdf.js");
-      const html2pdf = html2pdfModule.default || html2pdfModule;
-      await html2pdf().set(opt).from(element).save();
-      toast.success("PDF downloaded successfully!");
-    } catch (err) {
-      console.error("PDF generation failed:", err);
-      toast.error("Failed to generate PDF");
-    } finally {
-      element.style.display = "none";
-      setDownloading(false);
-    }
-  };
+			const exportNode = document.createElement("div");
+			// Match A4 portrait width in CSS pixels (96dpi) so export fills the page
+			exportNode.style.width = "794px";
+			exportNode.style.background = "#f4f8fb";
+			exportNode.style.padding = "16px";
+			exportNode.style.fontFamily = "Inter, Arial, sans-serif";
+			exportNode.style.boxSizing = "border-box";
+			exportNode.style.margin = "0 auto";
+			exportNode.innerHTML = `
+				<div style="background:linear-gradient(145deg,#113a4b 0%,#061824 100%);color:#fff;border-radius:16px;padding:18px;margin-bottom:12px;">
+					<div style="font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#cbd5e1;margin-bottom:8px;">AI Feedback Report</div>
+					<div style="font-size:26px;font-weight:800;line-height:1.2;word-break:break-word;">${escapeHtml(title)}</div>
+					<div style="font-size:13px;color:#cbd5e1;margin-top:8px;">${escapeHtml(analysisDate ? new Date(analysisDate).toLocaleString() : "—")}</div>
+				</div>
+				${
+					[wpm, fillerPct, fillerTotal, facePresence, gestureFreq].some((v) => v != null)
+						? `
+				<div style="background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:12px;margin-bottom:10px;">
+					<div style="font-size:11px;color:#64748b;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;">Key Metrics (raw values)</div>
+					<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+						${wpm != null ? `<div style="border:1px solid #e2e8f0;border-radius:12px;padding:10px;">
+							<div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Speaking speed</div>
+							<div style="font-size:16px;font-weight:800;color:#0f172a;margin-top:4px;">${escapeHtml(wpm)} WPM</div>
+						</div>` : ``}
+						${fillerTotal != null || fillerPct != null ? `<div style="border:1px solid #e2e8f0;border-radius:12px;padding:10px;">
+							<div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Filler words</div>
+							<div style="font-size:16px;font-weight:800;color:#0f172a;margin-top:4px;">
+								${escapeHtml(fillerTotal != null ? fillerTotal : "—")}
+								<span style="font-size:12px;font-weight:700;color:#64748b;">${fillerPct != null ? ` • ${Number(fillerPct).toFixed(1)}%` : ""}</span>
+							</div>
+						</div>` : ``}
+						${facePresence != null ? `<div style="border:1px solid #e2e8f0;border-radius:12px;padding:10px;">
+							<div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Face presence</div>
+							<div style="font-size:16px;font-weight:800;color:#0f172a;margin-top:4px;">${Number(facePresence).toFixed(0)}%</div>
+						</div>` : ``}
+						${gestureFreq != null ? `<div style="border:1px solid #e2e8f0;border-radius:12px;padding:10px;">
+							<div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Gestures</div>
+							<div style="font-size:16px;font-weight:800;color:#0f172a;margin-top:4px;">${Number(gestureFreq).toFixed(0)}%</div>
+						</div>` : ``}
+					</div>
+				</div>
+				`
+						: ``
+				}
+				<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px;">
+					<div style="background:#fff;border:1px solid #dbe4ee;border-radius:12px;padding:12px;">
+						<div style="font-size:11px;color:#64748b;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">Key Strengths</div>
+						<div style="font-size:24px;font-weight:800;color:#059669;margin-top:6px;">${strengths.length}</div>
+						<div style="font-size:11px;color:#64748b;margin-top:6px;">What you should keep doing consistently.</div>
+					</div>
+					<div style="background:#fff;border:1px solid #dbe4ee;border-radius:12px;padding:12px;">
+						<div style="font-size:11px;color:#64748b;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">Items to Focus</div>
+						<div style="font-size:24px;font-weight:800;color:#d97706;margin-top:6px;">${improvements.length}</div>
+						<div style="font-size:11px;color:#64748b;margin-top:6px;">The highest-impact areas for your next attempt.</div>
+					</div>
+					<div style="background:#fff;border:1px solid #dbe4ee;border-radius:12px;padding:12px;">
+						<div style="font-size:11px;color:#64748b;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">Overall Result</div>
+						<div style="display:flex;align-items:flex-end;gap:6px;margin-top:6px;">
+							<div style="font-size:24px;font-weight:800;color:#0f172a;">${finalScore != null ? Math.round(finalScore) : "—"}</div>
+							<div style="font-size:12px;color:#64748b;">${escapeHtml(grade)}</div>
+						</div>
+						<div style="font-size:11px;color:#64748b;margin-top:6px;">A quick quality snapshot of your presentation.</div>
+					</div>
+				</div>
+				<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+					<div style="background:linear-gradient(180deg,#ecfdf5 0%,#fff 100%);border:1px solid #a7f3d0;border-radius:14px;padding:14px;">
+						<div style="font-size:20px;font-weight:800;color:#065f46;margin-bottom:6px;">Key Strengths</div>
+						<div style="font-size:13px;color:#047857;margin-bottom:10px;">These are working well. Keep them consistent in every presentation.</div>
+						<ul style="margin:0;padding-left:18px;color:#064e3b;font-size:13px;line-height:1.6;word-break:break-word;">
+							${(strengths.length ? strengths : ["Keep practicing to reveal your strengths."]).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+						</ul>
+					</div>
+					<div style="background:linear-gradient(180deg,#fffbeb 0%,#fff 100%);border:1px solid #fde68a;border-radius:14px;padding:14px;">
+						<div style="font-size:20px;font-weight:800;color:#92400e;margin-bottom:6px;">Items to Focus</div>
+						<div style="font-size:13px;color:#b45309;margin-bottom:10px;">Improve these one by one to get visible score growth.</div>
+						<ul style="margin:0;padding-left:18px;color:#78350f;font-size:13px;line-height:1.6;word-break:break-word;">
+							${(improvements.length ? improvements : ["Great progress so far. Maintain consistency."]).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+						</ul>
+					</div>
+				</div>
+			`;
+			await html2pdf()
+				.set({
+					margin: [0, 0, 0, 0],
+					filename: `${safeTitle}.pdf`,
+					image: { type: "jpeg", quality: 0.98 },
+					html2canvas: {
+						scale: 2,
+						useCORS: true,
+						backgroundColor: "#f8fafc",
+						onclone: (clonedDoc) => {
+							clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach((el) => el.remove());
+							const baseStyle = clonedDoc.createElement("style");
+							baseStyle.textContent = `
+								* { box-sizing: border-box; }
+								body { margin: 0; background: #ffffff; color: #0f172a; }
+							`;
+							clonedDoc.head.appendChild(baseStyle);
+						},
+					},
+					jsPDF: { unit: "px", format: [794, 1123], orientation: "portrait" },
+					pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+				})
+				.from(exportNode)
+				.save();
+		} catch (downloadError) {
+			console.error("Failed to download report:", downloadError);
+			window.alert("Unable to download the feedback report right now. Please try again.");
+		} finally {
+			setDownloading(false);
+		}
+	};
 
-  /* ── Loading / Error / No-report states ─────────────────── */
-  if (loading) {
-    return (
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 ml-64 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-3" />
-            <p className="text-slate-500 text-sm">Loading report…</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
+	if (loading) {
+		return (
+			<div className="flex min-h-screen">
+				<Sidebar />
+				<main className="flex-1 ml-64 flex items-center justify-center">
+					<div className="text-center">
+						<Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-3" />
+						<p className="text-slate-500 text-sm">Loading feedback…</p>
+					</div>
+				</main>
+			</div>
+		);
+	}
 
-  if (error) {
-    return (
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 ml-64 flex items-center justify-center p-8">
-          <div className="glass rounded-2xl p-8 max-w-md text-center shadow-glass">
-            <AlertCircle className="w-14 h-14 text-red-500 mx-auto mb-3" />
-            <h2 className="text-xl font-bold text-slate-800 mb-2">Error</h2>
-            <p className="text-slate-600 mb-5 text-sm">{error}</p>
-            <button onClick={() => router.push("/my-videos")} className="btn-gradient text-white px-5 py-2 rounded-xl text-sm font-medium">
-              Back to Videos
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
+	if (error) {
+		return (
+			<div className="flex min-h-screen">
+				<Sidebar />
+				<main className="flex-1 ml-64 flex items-center justify-center p-8">
+					<div className="glass rounded-2xl p-8 max-w-md text-center shadow-glass">
+						<AlertCircle className="w-14 h-14 text-red-500 mx-auto mb-3" />
+						<h2 className="text-xl font-bold text-slate-800 mb-2">Error</h2>
+						<p className="text-slate-600 mb-5 text-sm">{error}</p>
+						<button
+							onClick={() => router.push("/my-videos")}
+							className="btn-gradient text-white px-5 py-2 rounded-xl text-sm font-medium"
+						>
+							Back to Videos
+						</button>
+					</div>
+				</main>
+			</div>
+		);
+	}
 
-  if (!report) {
-    return (
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 ml-64 flex items-center justify-center p-8">
-          <div className="glass rounded-2xl p-8 max-w-md text-center shadow-glass">
-            <AlertCircle className="w-14 h-14 text-yellow-500 mx-auto mb-3" />
-            <h2 className="text-xl font-bold text-slate-800 mb-2">No Report Found</h2>
-            <p className="text-slate-600 mb-5 text-sm">This session has not been analyzed yet.</p>
-            <button onClick={() => router.push("/my-videos")} className="btn-gradient text-white px-5 py-2 rounded-xl text-sm font-medium">
-              Back to Videos
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
+	if (!report) {
+		return null;
+	}
 
-  /* ── Extract data ───────────────────────────────────────── */
-  const finalScore = report.scores?.final_score;
-  const grade = report.scores?.grade || "N/A";
-  const rating = report.scores?.rating || grade;
-  const hasScore = finalScore != null;
+	const feedback = report.feedback || {};
+	const strengths = feedback.strengths || [];
+	const improvements = feedback.improvements || [];
+	const title = session?.title || "Feedback Report";
+	const analysisDate = session?.analyzed_at || session?.created_at || session?.start_time;
+	const finalScore = report?.scores?.final_score ?? report?.scores?.overall ?? null;
+	const grade = report?.scores?.grade || report?.scores?.rating || "Unrated";
 
-  const voice = report.scores?.breakdown?.voice_delivery;
-  const content = report.scores?.breakdown?.content_quality;
-  const confidence = report.scores?.breakdown?.confidence_body_language;
-  const engagement = report.scores?.breakdown?.engagement;
+	return (
+		<div className="flex min-h-screen">
+			<Sidebar />
 
-  const audio = report.audio_analysis || {};
-  const txt = report.text_analysis || {};
-  const vid = report.video_analysis || {};
-  const feedback = report.feedback || {};
-  const strengths = feedback.strengths || [];
-  const improvements = feedback.improvements || [];
-  const overallAssessment = feedback.overall_assessment || "";
+			<main className="flex-1 ml-64 p-4 sm:p-6 lg:p-7">
+				<div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-6">
+					<div className="rounded-3xl p-5 lg:p-6 relative overflow-hidden text-white" style={{ background: "linear-gradient(145deg, #113a4b 0%, #061824 100%)" }}>
+						<div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-sky-300/15 blur-3xl"></div>
+						<div className="relative flex flex-wrap items-start justify-between gap-6">
+							<div>
+								<button
+									onClick={() => router.push(`/results/${sessionId}`)}
+									className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-800 hover:text-slate-900 bg-white px-3 py-1.5 rounded-lg border border-white/70"
+								>
+									<ArrowLeft size={16} />
+									Back to Results
+								</button>
 
-  const gc = gradeColor(grade);
+								<div className="flex items-center gap-3 mb-2">
+									<div className="p-3 rounded-2xl bg-white/10 border border-white/20">
+										<FileText className="text-white" size={22} />
+									</div>
+									<div>
+										<h1 className="text-2xl lg:text-3xl font-bold text-white">{title}</h1>
+										<p className="text-slate-200 mt-1.5 max-w-2xl text-sm">
+											Your personalized feedback snapshot. Keep your strengths, focus on key improvements, and grow confidence with each session.
+										</p>
+										<div className="flex items-center gap-2 text-sm text-slate-200 mt-2">
+											<Calendar size={14} />
+											<span>{analysisDate ? new Date(analysisDate).toLocaleString() : "—"}</span>
+										</div>
+									</div>
+								</div>
+							</div>
 
-  /* ── Category score items for the mini bar ───────────────── */
-  const categories = [
-    { key: "voice", label: "Voice", score: voice?.score, icon: Volume2, color: "cyan", skipped: voice?.skipped },
-    { key: "content", label: "Content", score: content?.score, icon: FileText, color: "blue", skipped: content?.skipped },
-    { key: "confidence", label: "Confidence", score: confidence?.score, icon: User, color: "purple", skipped: confidence?.skipped },
-    { key: "engagement", label: "Engagement", score: engagement?.score, icon: Zap, color: "pink", skipped: engagement?.skipped },
-  ].filter(c => !c.skipped && c.score != null);
+							<div className="flex flex-col items-stretch gap-3 min-w-[200px]" data-html2canvas-ignore="true">
+								<button
+									onClick={handleDownload}
+									disabled={downloading}
+									className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-white font-semibold transition-transform hover:-translate-y-0.5 disabled:opacity-70"
+									style={{ background: "linear-gradient(135deg, #1f4959 0%, #011425 100%)", boxShadow: "0 14px 28px rgba(1, 20, 37, 0.35)" }}
+								>
+									{downloading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+									{downloading ? "Preparing Report..." : "Download Report"}
+								</button>
+							</div>
+						</div>
+					</div>
 
-  /* ─── Render ───────────────────────────────────────────── */
-  return (
-    <div className="flex min-h-screen">
-      <ToastContainer />
-      <Sidebar />
+					<div ref={reportRef} id="export-report-root" className="space-y-5">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
+							<div className="glass rounded-xl p-3.5 h-fit">
+								<p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Key Strengths</p>
+								<p className="text-2xl font-bold text-emerald-600 leading-none">{strengths.length}</p>
+								<p className="text-xs text-slate-500 mt-2 leading-5">What you should keep doing consistently.</p>
+							</div>
+							<div className="glass rounded-xl p-3.5 h-fit">
+								<p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Items to Focus</p>
+								<p className="text-2xl font-bold text-amber-600 leading-none">{improvements.length}</p>
+								<p className="text-xs text-slate-500 mt-2 leading-5">The highest-impact areas for your next attempt.</p>
+							</div>
+							<div className="glass rounded-xl p-3.5 h-fit">
+								<p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Overall Result</p>
+								<div className="flex items-end gap-2">
+									<p className="text-2xl font-bold text-slate-800 leading-none">{finalScore != null ? Math.round(finalScore) : "—"}</p>
+									<span className="text-xs text-slate-500 pb-0.5">{grade}</span>
+								</div>
+								<p className="text-xs text-slate-500 mt-2 leading-5">A quick quality snapshot of your presentation.</p>
+							</div>
+						</div>
 
-      <main className="flex-1 ml-64 p-5 lg:p-7 relative z-10">
-        <div className="max-w-4xl mx-auto">
+						<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+							<div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-5">
+								<h2 className="text-xl font-bold text-emerald-800 mb-3">Key Strengths</h2>
+								<p className="text-sm text-emerald-700 mb-4">These are working well. Keep them consistent in every presentation.</p>
+								<ul className="space-y-2.5">
+									{strengths.length > 0 ? strengths.map((item, index) => (
+										<li key={index} className="text-sm text-emerald-900 leading-6">• {item}</li>
+									)) : <li className="text-sm text-emerald-700">• Keep practicing to reveal your strengths.</li>}
+								</ul>
+							</div>
 
-          {/* ── Header ──────────────────────────────────── */}
-          <div className="mb-5">
-            <button onClick={() => router.back()} className="flex items-center gap-1.5 text-slate-500 hover:text-slate-800 text-sm mb-3 transition-colors">
-              <ArrowLeft size={16} /><span>Back</span>
-            </button>
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div>
-                <h1 className="text-2xl font-bold text-slate-800">Detailed Report</h1>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  {session?.title || "Presentation"}
-                  {session?.start_time ? ` • ${new Date(session.start_time).toLocaleDateString()}` : ""}
-                </p>
-              </div>
-              <button
-                onClick={handleDownload}
-                disabled={downloading}
-                className="btn-gradient text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 shadow-md hover:shadow-lg transition-all disabled:opacity-60"
-              >
-                {downloading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
-                {downloading ? "Generating…" : "Download PDF"}
-              </button>
-            </div>
-          </div>
-
-          {/* ── Warnings ────────────────────────────────── */}
-          {(!report?.metadata?.speech_detected || !report?.metadata?.face_detected) && (
-            <div className="flex items-start gap-2.5 p-3 mb-4 rounded-xl bg-amber-50/80 border border-amber-200 text-sm">
-              <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-              <p className="text-amber-700">
-                {!report.metadata?.speech_detected && !report.metadata?.face_detected
-                  ? "No speech or face detected — feedback is limited."
-                  : !report.metadata?.speech_detected
-                    ? "No speech detected. Voice & content feedback unavailable."
-                    : "No face detected. Visual feedback unavailable."}
-              </p>
-            </div>
-          )}
-
-          {/* ── Compact Score Summary ─────────────────── */}
-          <div className="glass rounded-2xl p-5 mb-5 shadow-glass">
-            <div className="flex items-center gap-5 flex-wrap">
-              {hasScore && <ScoreRing score={finalScore} size={68} strokeWidth={5} />}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-0.5">Overall Performance</p>
-                {hasScore ? (
-                  <p className="text-2xl font-bold text-slate-800">{finalScore.toFixed(1)} <span className="text-sm text-slate-400 font-normal">/ 100</span></p>
-                ) : (
-                  <p className="text-lg font-bold text-slate-500">Not Available</p>
-                )}
-              </div>
-              {hasScore && (
-                <div className={`px-3 py-2 rounded-lg border text-center ${gc.bg}`}>
-                  <p className={`text-lg font-bold ${gc.text}`}>{rating}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Category mini scores */}
-            {categories.length > 0 && (
-              <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-slate-200/50">
-                {categories.map((cat) => {
-                  const Icon = cat.icon;
-                  const l = lvl(cat.score);
-                  return (
-                    <div key={cat.key} className="flex items-center gap-1.5 text-xs">
-                      <Icon size={13} className={`text-${cat.color}-500`} />
-                      <span className="text-slate-600">{cat.label}:</span>
-                      <span className="font-bold" style={{ color: l.color }}>{cat.score.toFixed(0)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* ── Overall Assessment ────────────────────── */}
-          {overallAssessment && (
-            <div className="glass rounded-xl p-4 mb-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <MessageSquare size={16} className="text-blue-500" />
-                <h3 className="text-sm font-bold text-slate-800">Overall Assessment</h3>
-              </div>
-              <p className="text-[13px] text-slate-700 leading-relaxed">{overallAssessment}</p>
-            </div>
-          )}
-
-          {/* ── Strengths & Focus Items ──────────────── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-            {/* Key Strengths */}
-            <div className="rounded-2xl border border-emerald-200 bg-linear-to-br from-emerald-50/90 via-white/60 to-emerald-50/40 p-5 shadow-sm">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="p-2 bg-emerald-100 rounded-xl">
-                  <CheckCircle size={20} className="text-emerald-600" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-emerald-800">Key Strengths</h3>
-                  <p className="text-[11px] text-emerald-600">What you did well</p>
-                </div>
-              </div>
-              {strengths.length > 0 ? (
-                <ul className="space-y-2.5">
-                  {strengths.map((s, i) => (
-                    <li key={i} className="flex items-start gap-2.5">
-                      <span className="mt-1 shrink-0 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
-                        <CheckCircle size={12} className="text-emerald-600" />
-                      </span>
-                      <span className="text-[13px] text-emerald-900 leading-snug">{s}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-emerald-600 italic py-4 text-center">Keep practicing to build more strengths!</p>
-              )}
-            </div>
-
-            {/* Focus Items */}
-            <div className="rounded-2xl border border-amber-200 bg-linear-to-br from-amber-50/90 via-white/60 to-red-50/30 p-5 shadow-sm">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="p-2 bg-amber-100 rounded-xl">
-                  <Target size={20} className="text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-amber-800">Focus Items</h3>
-                  <p className="text-[11px] text-amber-600">Areas to work on next</p>
-                </div>
-              </div>
-              {improvements.length > 0 ? (
-                <ul className="space-y-2.5">
-                  {improvements.map((s, i) => (
-                    <li key={i} className="flex items-start gap-2.5">
-                      <span className="mt-1 shrink-0 w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center">
-                        <span className="text-amber-600 text-[11px] font-bold">!</span>
-                      </span>
-                      <span className="text-[13px] text-amber-900 leading-snug">{s}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-amber-600 italic py-4 text-center">Outstanding! No major areas for improvement.</p>
-              )}
-            </div>
-          </div>
-
-          {/* ── Collapsible Metrics Summary ──────────── */}
-          <div className="glass rounded-xl overflow-hidden mb-5 border-2 border-blue-200/40 shadow-md hover:shadow-lg transition-all">
-            <button onClick={() => setShowMetrics(!showMetrics)} className={`w-full flex items-center justify-between px-5 py-4 transition-all duration-200 text-left cursor-pointer ${showMetrics ? "bg-blue-50/50" : "hover:bg-white/70 active:bg-white/60"}`}>
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <TrendingUp size={16} className="text-blue-500" />
-                </div>
-                <span className="text-sm font-bold text-slate-800">Detailed Metrics</span>
-              </div>
-              <ChevronDown size={18} className={`text-blue-500 transition-transform duration-300 ${showMetrics ? "rotate-180" : ""}`} />
-            </button>
-            <div className={`overflow-hidden transition-all duration-300 ${showMetrics ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"}`}>
-              <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Voice */}
-                {!voice?.skipped && voice?.score != null && (
-                  <div className="p-3 rounded-lg bg-cyan-50/50 border border-cyan-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Volume2 size={14} className="text-cyan-600" />
-                      <span className="text-xs font-bold text-slate-800">Voice & Delivery</span>
-                      <span className="ml-auto text-xs font-bold" style={{ color: lvl(voice.score).color }}>{voice.score.toFixed(0)}/100</span>
-                    </div>
-                    <div className="space-y-1 text-xs text-slate-600">
-                      <div className="flex justify-between"><span>Speed</span><span className="font-medium text-slate-800">{audio.speaking_speed?.wpm ?? "—"} WPM</span></div>
-                      <div className="flex justify-between"><span>Fillers</span><span className="font-medium text-slate-800">{audio.filler_words?.total ?? "—"} ({audio.filler_words?.percentage != null ? `${audio.filler_words.percentage.toFixed(1)}%` : "—"})</span></div>
-                      <div className="flex justify-between"><span>Pitch Stability</span><span className="font-medium text-slate-800">{audio.pitch?.stability_score?.toFixed(0) ?? "—"}/100</span></div>
-                    </div>
-                  </div>
-                )}
-                {/* Content */}
-                {!content?.skipped && content?.score != null && (
-                  <div className="p-3 rounded-lg bg-blue-50/50 border border-blue-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText size={14} className="text-blue-600" />
-                      <span className="text-xs font-bold text-slate-800">Content Quality</span>
-                      <span className="ml-auto text-xs font-bold" style={{ color: lvl(content.score).color }}>{content.score.toFixed(0)}/100</span>
-                    </div>
-                    <div className="space-y-1 text-xs text-slate-600">
-                      <div className="flex justify-between"><span>Grammar</span><span className="font-medium text-slate-800">{txt.grammar?.score?.toFixed(0) ?? "—"}/100</span></div>
-                      <div className="flex justify-between"><span>Repetition</span><span className="font-medium text-slate-800">{txt.repetition?.repetition_score?.toFixed(0) ?? "—"}/100</span></div>
-                      <div className="flex justify-between"><span>Words</span><span className="font-medium text-slate-800">{txt.word_count || "—"}</span></div>
-                    </div>
-                  </div>
-                )}
-                {/* Confidence */}
-                {!confidence?.skipped && confidence?.score != null && (
-                  <div className="p-3 rounded-lg bg-purple-50/50 border border-purple-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <User size={14} className="text-purple-600" />
-                      <span className="text-xs font-bold text-slate-800">Confidence</span>
-                      <span className="ml-auto text-xs font-bold" style={{ color: lvl(confidence.score).color }}>{confidence.score.toFixed(0)}/100</span>
-                    </div>
-                    <div className="space-y-1 text-xs text-slate-600">
-                      <div className="flex justify-between"><span>Eye Contact</span><span className="font-medium text-slate-800">{vid.eye_contact?.score?.toFixed(0) ?? "—"}/100</span></div>
-                      <div className="flex justify-between"><span>Posture</span><span className="font-medium text-slate-800">{vid.posture?.score?.toFixed(0) ?? "—"}/100</span></div>
-                      <div className="flex justify-between"><span>Face Visible</span><span className="font-medium text-slate-800">{vid.face_presence?.percentage?.toFixed(0) ?? "—"}%</span></div>
-                    </div>
-                  </div>
-                )}
-                {/* Engagement */}
-                {!engagement?.skipped && engagement?.score != null && (
-                  <div className="p-3 rounded-lg bg-pink-50/50 border border-pink-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Zap size={14} className="text-pink-600" />
-                      <span className="text-xs font-bold text-slate-800">Engagement</span>
-                      <span className="ml-auto text-xs font-bold" style={{ color: lvl(engagement.score).color }}>{engagement.score.toFixed(0)}/100</span>
-                    </div>
-                    <div className="space-y-1 text-xs text-slate-600">
-                      <div className="flex justify-between"><span>Confidence Est.</span><span className="font-medium text-slate-800">{vid.confidence_estimate?.toFixed(0) ?? "—"}/100</span></div>
-                      <div className="flex justify-between"><span>Gestures</span><span className="font-medium text-slate-800">{vid.gestures?.frequency_percentage?.toFixed(0) ?? "—"}%</span></div>
-                      <div className="flex justify-between"><span>Vol. Variation</span><span className="font-medium text-slate-800">{audio.volume?.std_db?.toFixed(1) ?? "—"} dB</span></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ── Navigation ──────────────────────────────── */}
-          <div className="flex flex-wrap gap-2.5 pb-8">
-            <button onClick={() => router.push(`/results/${sessionId}`)} className="btn-gradient text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1.5 shadow-md hover:shadow-lg transition-all">
-              <TrendingUp size={15} /> View Score Breakdown
-            </button>
-            <button onClick={handleDownload} disabled={downloading} className="glass text-slate-700 px-5 py-2.5 rounded-xl text-sm font-medium border border-slate-200 hover:shadow-md transition-all flex items-center gap-1.5 disabled:opacity-60">
-              {downloading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
-              {downloading ? "Generating…" : "Download Report"}
-            </button>
-            <button onClick={() => router.push("/my-videos")} className="glass text-slate-700 px-5 py-2.5 rounded-xl text-sm font-medium border border-slate-200 hover:shadow-md transition-all">
-              Back to Videos
-            </button>
-          </div>
-        </div>
-
-        {/* ───────────────────────────────────────────────── */}
-        {/* ── Professional PDF Content (hidden) ───────────── */}
-        {/* ───────────────────────────────────────────────── */}
-        <div id="report-pdf-content" style={{
-          display: "none",
-          maxWidth: "750px",
-          margin: "0 auto",
-          padding: "40px 50px",
-          backgroundColor: "#ffffff",
-          color: "#1e293b",
-          fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-          fontSize: "13px",
-          lineHeight: "1.6",
-        }}>
-          {/* PDF Header with gradient bar */}
-          <div style={{
-            marginBottom: "28px",
-            pageBreakInside: "avoid",
-            breakInside: "avoid",
-          }}>
-            <div style={{
-              height: "4px",
-              width: "100%",
-              borderRadius: "2px",
-              marginBottom: "20px",
-              background: "linear-gradient(90deg, #00D9FF 0%, #3B82F6 50%, #8B5CF6 100%)",
-            }} />
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              flexWrap: "wrap",
-              gap: "16px",
-            }}>
-              <div style={{ flex: "1 1 60%" }}>
-                <h1 style={{
-                  fontSize: "26px",
-                  fontWeight: "800",
-                  color: "#0f172a",
-                  margin: "0 0 6px 0",
-                  lineHeight: "1.2",
-                }}>
-                  Presentation Analysis Report
-                </h1>
-                <p style={{
-                  fontSize: "13px",
-                  color: "#64748b",
-                  margin: 0,
-                  lineHeight: "1.4",
-                }}>
-                  {session?.title || "Untitled Presentation"} • {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-                </p>
-              </div>
-              <div style={{
-                padding: "10px 18px",
-                borderRadius: "10px",
-                textAlign: "center",
-                background: "linear-gradient(135deg, #00D9FF 0%, #3B82F6 100%)",
-                flexShrink: 0,
-              }}>
-                <span style={{
-                  fontSize: "11px",
-                  color: "rgba(255,255,255,0.95)",
-                  display: "block",
-                  fontWeight: "700",
-                  marginBottom: "2px",
-                }}>AI Coach</span>
-                <span style={{
-                  fontSize: "9px",
-                  color: "rgba(255,255,255,0.8)",
-                  display: "block",
-                }}>Presentation Mastery</span>
-              </div>
-            </div>
-          </div>
-
-          {/* PDF Overall Score */}
-          <div style={{
-            padding: "24px",
-            borderRadius: "12px",
-            marginBottom: "28px",
-            background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-            border: "1px solid #e2e8f0",
-            pageBreakInside: "avoid",
-            breakInside: "avoid",
-          }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "24px",
-              flexWrap: "wrap",
-            }}>
-              <div style={{ flex: "0 0 auto" }}>
-                <p style={{
-                  fontSize: "10px",
-                  textTransform: "uppercase",
-                  letterSpacing: "1.2px",
-                  color: "#64748b",
-                  fontWeight: "700",
-                  marginBottom: "6px",
-                  margin: "0 0 6px 0",
-                }}>Overall Score</p>
-                <p style={{
-                  fontSize: "44px",
-                  fontWeight: "800",
-                  color: "#2563eb",
-                  margin: 0,
-                  lineHeight: "1",
-                }}>{finalScore?.toFixed(1) ?? "N/A"}</p>
-                <p style={{
-                  fontSize: "12px",
-                  color: "#94a3b8",
-                  margin: "4px 0 0 0",
-                }}>out of 100</p>
-              </div>
-              
-              <div style={{
-                width: "1px",
-                height: "60px",
-                backgroundColor: "#cbd5e1",
-                flexShrink: 0,
-              }} />
-              
-              <div style={{ flex: "0 0 auto" }}>
-                <p style={{
-                  fontSize: "10px",
-                  textTransform: "uppercase",
-                  letterSpacing: "1.2px",
-                  color: "#64748b",
-                  fontWeight: "700",
-                  marginBottom: "6px",
-                  margin: "0 0 6px 0",
-                }}>Grade</p>
-                <p style={{
-                  fontSize: "34px",
-                  fontWeight: "800",
-                  color: "#334155",
-                  margin: 0,
-                  lineHeight: "1",
-                }}>{rating}</p>
-                <p style={{
-                  fontSize: "12px",
-                  color: "#64748b",
-                  margin: "4px 0 0 0",
-                }}>{grade}</p>
-              </div>
-              
-              <div style={{
-                marginLeft: "auto",
-                flex: "1 1 auto",
-                minWidth: "200px",
-              }}>
-                <p style={{
-                  fontSize: "10px",
-                  textTransform: "uppercase",
-                  letterSpacing: "1.2px",
-                  color: "#64748b",
-                  fontWeight: "700",
-                  marginBottom: "10px",
-                  margin: "0 0 10px 0",
-                }}>Categories</p>
-                <div style={{
-                  display: "flex",
-                  gap: "14px",
-                  flexWrap: "wrap",
-                  justifyContent: "flex-start",
-                }}>
-                  {[
-                    { l: "Voice", s: voice?.score, c: "#00D9FF" },
-                    { l: "Content", s: content?.score, c: "#3B82F6" },
-                    { l: "Confidence", s: confidence?.score, c: "#8B5CF6" },
-                    { l: "Engagement", s: engagement?.score, c: "#EC4899" },
-                  ].filter(c => c.s != null).map(c => (
-                    <div key={c.l} style={{
-                      textAlign: "center",
-                      flex: "0 0 auto",
-                    }}>
-                      <div style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "12px",
-                        fontWeight: "700",
-                        color: "#fff",
-                        backgroundColor: c.c,
-                        margin: "0 auto",
-                      }}>{c.s.toFixed(0)}</div>
-                      <p style={{
-                        fontSize: "9px",
-                        color: "#64748b",
-                        marginTop: "4px",
-                        margin: "4px 0 0 0",
-                      }}>{c.l}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* PDF Strengths & Improvements */}
-          <div style={{
-            marginBottom: "28px",
-            pageBreakInside: "avoid",
-            breakInside: "avoid",
-          }}>
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "20px",
-            }}>
-              <div style={{
-                padding: "18px",
-                borderRadius: "10px",
-                border: "1px solid #bbf7d0",
-                backgroundColor: "#f0fdf4",
-                boxSizing: "border-box",
-              }}>
-                <h3 style={{
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  color: "#166534",
-                  marginBottom: "12px",
-                  margin: "0 0 12px 0",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}>
-                  <span style={{
-                    display: "inline-block",
-                    width: "9px",
-                    height: "9px",
-                    borderRadius: "50%",
-                    backgroundColor: "#22c55e",
-                    flexShrink: 0,
-                  }} />
-                  <span>Key Strengths</span>
-                </h3>
-                <ul style={{
-                  margin: 0,
-                  paddingLeft: "20px",
-                  color: "#15803d",
-                  fontSize: "12px",
-                  lineHeight: "1.6",
-                }}>
-                  {strengths.length > 0 ? strengths.map((s, i) => (
-                    <li key={i} style={{
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}>{s}</li>
-                  )) : <li style={{
-                    color: "#6b7280",
-                    fontStyle: "italic",
-                    listStyleType: "none",
-                    marginLeft: "-20px",
-                  }}>No specific strengths identified</li>}
-                </ul>
-              </div>
-              
-              <div style={{
-                padding: "18px",
-                borderRadius: "10px",
-                border: "1px solid #fed7aa",
-                backgroundColor: "#fffbeb",
-                boxSizing: "border-box",
-              }}>
-                <h3 style={{
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  color: "#92400e",
-                  marginBottom: "12px",
-                  margin: "0 0 12px 0",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}>
-                  <span style={{
-                    display: "inline-block",
-                    width: "9px",
-                    height: "9px",
-                    borderRadius: "50%",
-                    backgroundColor: "#f59e0b",
-                    flexShrink: 0,
-                  }} />
-                  <span>Focus Items</span>
-                </h3>
-                <ul style={{
-                  margin: 0,
-                  paddingLeft: "20px",
-                  color: "#b45309",
-                  fontSize: "12px",
-                  lineHeight: "1.6",
-                }}>
-                  {improvements.length > 0 ? improvements.map((s, i) => (
-                    <li key={i} style={{
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}>{s}</li>
-                  )) : <li style={{
-                    color: "#6b7280",
-                    fontStyle: "italic",
-                    listStyleType: "none",
-                    marginLeft: "-20px",
-                  }}>No areas for improvement identified</li>}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* PDF Detailed Metrics */}
-          <div style={{
-            marginBottom: "28px",
-            pageBreakInside: "avoid",
-            breakInside: "avoid",
-          }}>
-            <h2 style={{
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "#0f172a",
-              marginBottom: "16px",
-              margin: "0 0 16px 0",
-              paddingBottom: "10px",
-              borderBottom: "2px solid #e2e8f0",
-            }}>Detailed Metrics</h2>
-            
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}>
-              {/* Voice */}
-              {voice?.score != null && (
-                <div style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "10px",
-                  padding: "16px",
-                  backgroundColor: "#fff",
-                  borderTop: "3px solid #00D9FF",
-                  boxSizing: "border-box",
-                  pageBreakInside: "avoid",
-                  breakInside: "avoid",
-                }}>
-                  <h3 style={{
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    color: "#0f172a",
-                    marginBottom: "12px",
-                    margin: "0 0 12px 0",
-                  }}>Voice & Delivery — {voice.score.toFixed(0)}/100</h3>
-                  <div style={{
-                    fontSize: "11px",
-                    color: "#334155",
-                    lineHeight: "1.6",
-                  }}>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Speaking Speed</span><span style={{ fontWeight: "600" }}>{audio.speaking_speed?.wpm ?? "—"} WPM</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Filler Words</span><span style={{ fontWeight: "600" }}>{audio.filler_words?.total ?? 0} ({audio.filler_words?.percentage?.toFixed(1) ?? "0"}%)</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Pitch Stability</span><span style={{ fontWeight: "600" }}>{audio.pitch?.stability_score?.toFixed(0) ?? "—"}/100</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      margin: 0,
-                    }}><span>Volume Stability</span><span style={{ fontWeight: "600" }}>{audio.volume?.stability_score?.toFixed(0) ?? "—"}/100</span></div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Content */}
-              {content?.score != null && (
-                <div style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "10px",
-                  padding: "16px",
-                  backgroundColor: "#fff",
-                  borderTop: "3px solid #3B82F6",
-                  boxSizing: "border-box",
-                  pageBreakInside: "avoid",
-                  breakInside: "avoid",
-                }}>
-                  <h3 style={{
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    color: "#0f172a",
-                    marginBottom: "12px",
-                    margin: "0 0 12px 0",
-                  }}>Content Quality — {content.score.toFixed(0)}/100</h3>
-                  <div style={{
-                    fontSize: "11px",
-                    color: "#334155",
-                    lineHeight: "1.6",
-                  }}>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Grammar</span><span style={{ fontWeight: "600" }}>{txt.grammar?.score?.toFixed(0) ?? "—"}/100</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Repetition</span><span style={{ fontWeight: "600" }}>{txt.repetition?.repetition_score?.toFixed(0) ?? "—"}/100</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Word Count</span><span style={{ fontWeight: "600" }}>{txt.word_count || "—"}</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      margin: 0,
-                      flexWrap: "wrap",
-                      gap: "4px",
-                    }}>
-                      <span>Structure</span>
-                      <span style={{
-                        fontWeight: "600",
-                        fontSize: "10px",
-                      }}>
-                        {txt.structure?.has_intro ? "✓ Intro" : "✗ Intro"} · {txt.structure?.has_body ? "✓ Body" : "✗ Body"} · {txt.structure?.has_conclusion ? "✓ End" : "✗ End"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Confidence */}
-              {confidence?.score != null && (
-                <div style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "10px",
-                  padding: "16px",
-                  backgroundColor: "#fff",
-                  borderTop: "3px solid #8B5CF6",
-                  boxSizing: "border-box",
-                  pageBreakInside: "avoid",
-                  breakInside: "avoid",
-                }}>
-                  <h3 style={{
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    color: "#0f172a",
-                    marginBottom: "12px",
-                    margin: "0 0 12px 0",
-                  }}>Confidence — {confidence.score.toFixed(0)}/100</h3>
-                  <div style={{
-                    fontSize: "11px",
-                    color: "#334155",
-                    lineHeight: "1.6",
-                  }}>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Eye Contact</span><span style={{ fontWeight: "600" }}>{vid.eye_contact?.score?.toFixed(0) ?? "—"}/100</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Posture</span><span style={{ fontWeight: "600" }}>{vid.posture?.score?.toFixed(0) ?? "—"}/100</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Face Visible</span><span style={{ fontWeight: "600" }}>{vid.face_presence?.percentage?.toFixed(0) ?? "—"}%</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      margin: 0,
-                    }}><span>Gestures</span><span style={{ fontWeight: "600" }}>{vid.gestures?.frequency_percentage?.toFixed(0) ?? "—"}%</span></div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Engagement */}
-              {engagement?.score != null && (
-                <div style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "10px",
-                  padding: "16px",
-                  backgroundColor: "#fff",
-                  borderTop: "3px solid #EC4899",
-                  boxSizing: "border-box",
-                  pageBreakInside: "avoid",
-                  breakInside: "avoid",
-                }}>
-                  <h3 style={{
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    color: "#0f172a",
-                    marginBottom: "12px",
-                    margin: "0 0 12px 0",
-                  }}>Engagement — {engagement.score.toFixed(0)}/100</h3>
-                  <div style={{
-                    fontSize: "11px",
-                    color: "#334155",
-                    lineHeight: "1.6",
-                  }}>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Confidence Est.</span><span style={{ fontWeight: "600" }}>{vid.confidence_estimate?.toFixed(0) ?? "—"}/100</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      margin: "0 0 6px 0",
-                    }}><span>Gestures</span><span style={{ fontWeight: "600" }}>{vid.gestures?.frequency_percentage?.toFixed(0) ?? "—"}%</span></div>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      margin: 0,
-                    }}><span>Volume Var.</span><span style={{ fontWeight: "600" }}>{audio.volume?.std_db?.toFixed(1) ?? "—"} dB</span></div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* PDF Assessment */}
-          {overallAssessment && (
-            <div style={{
-              padding: "16px 18px",
-              borderRadius: "10px",
-              backgroundColor: "#f8fafc",
-              border: "1px solid #e2e8f0",
-              marginBottom: "28px",
-              margin: "0 0 28px 0",
-              pageBreakInside: "avoid",
-              breakInside: "avoid",
-            }}>
-              <h3 style={{
-                fontSize: "13px",
-                fontWeight: "700",
-                color: "#0f172a",
-                marginBottom: "8px",
-                margin: "0 0 8px 0",
-              }}>Overall Assessment</h3>
-              <p style={{
-                fontSize: "12px",
-                color: "#475569",
-                margin: 0,
-                lineHeight: "1.65",
-              }}>{overallAssessment}</p>
-            </div>
-          )}
-
-          {/* PDF Footer */}
-          <div style={{
-            marginTop: "36px",
-            margin: "36px 0 0 0",
-            textAlign: "center",
-            paddingTop: "18px",
-            borderTop: "1px solid #e2e8f0",
-            pageBreakInside: "avoid",
-            breakInside: "avoid",
-          }}>
-            <div style={{
-              height: "3px",
-              width: "70px",
-              margin: "0 auto 12px",
-              borderRadius: "2px",
-              background: "linear-gradient(90deg, #00D9FF, #8B5CF6)",
-            }} />
-            <p style={{
-              fontSize: "11px",
-              color: "#94a3b8",
-              margin: 0,
-              lineHeight: "1.5",
-            }}>
-              Generated by AI Presentation Coach • {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-            </p>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+							<div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5">
+								<h2 className="text-xl font-bold text-amber-800 mb-3">Items to Focus</h2>
+								<p className="text-sm text-amber-700 mb-4">Improve these one by one to get visible score growth.</p>
+								<ul className="space-y-2.5">
+									{improvements.length > 0 ? improvements.map((item, index) => (
+										<li key={index} className="text-sm text-amber-900 leading-6">• {item}</li>
+									)) : <li className="text-sm text-amber-700">• Great progress so far. Maintain consistency.</li>}
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	);
 }

@@ -3,14 +3,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Sidebar from "../../components/Sidebar";
 import ScoreRing from "../../components/ScoreRing";
-import MetricTooltip from "../../components/MetricTooltip";
 import "../../components/bg.css";
 import {
-  ArrowLeft, Loader2, AlertCircle, Volume2, FileText, User, Zap,
-  ChevronDown, TrendingUp, Download
+  ArrowLeft, Loader2, AlertCircle, Volume2, FileText, User, Zap
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell } from "recharts";
 
 /* ─── Helpers ────────────────────────────────────────────── */
 const lvl = (s) => {
@@ -63,22 +62,6 @@ const Badge = ({ label, bg, text }) => (
   </span>
 );
 
-const MetricRow = ({ label, value, unit, badge, tooltip }) => (
-  <div className="flex items-center justify-between py-2 border-b border-slate-100/60 last:border-0">
-    <div className="flex items-center gap-1 text-[13px] text-slate-600">
-      <span>{label}</span>
-      {tooltip && <MetricTooltip {...tooltip} />}
-    </div>
-    <div className="flex items-center gap-2">
-      <span className="text-[13px] font-semibold text-slate-800">
-        {value ?? "N/A"}
-        {unit && <span className="text-slate-400 font-normal text-xs">{unit}</span>}
-      </span>
-      {badge && <Badge {...badge} />}
-    </div>
-  </div>
-);
-
 /* ─── Main Component ─────────────────────────────────────── */
 export default function ResultsPage() {
   const params = useParams();
@@ -89,7 +72,6 @@ export default function ResultsPage() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [openSections, setOpenSections] = useState({});
 
   /* ── Fetch (unchanged API logic) ────────────────────────── */
   useEffect(() => {
@@ -164,8 +146,6 @@ export default function ResultsPage() {
     };
     fetchReport();
   }, [sessionId]);
-
-  const toggle = (key) => setOpenSections((p) => ({ ...p, [key]: !p[key] }));
 
   /* ── Loading state ─────────────────────────────────────── */
   if (loading) {
@@ -256,6 +236,12 @@ export default function ResultsPage() {
   const confEstimate = video.confidence_estimate;
 
   const gc = gradeColor(grade);
+  const chartData = [
+    { category: "Voice & Delivery", score: voice?.score ?? 0, color: "#22c1dc" },
+    { category: "Content Quality", score: content?.score ?? 0, color: "#3b82f6" },
+    { category: "Confidence & Body Language", score: confidence?.score ?? 0, color: "#7c5cff" },
+    { category: "Engagement", score: engagement?.score ?? 0, color: "#ec4899" },
+  ];
 
   /* ─── Render ───────────────────────────────────────────── */
   return (
@@ -263,8 +249,8 @@ export default function ResultsPage() {
       <ToastContainer />
       <Sidebar />
 
-      <main className="flex-1 ml-64 p-5 lg:p-7 relative z-10">
-        <div className="max-w-5xl mx-auto">
+      <main className="flex-1 ml-64 p-4 sm:p-5 lg:p-6 relative z-10">
+        <div className="max-w-6xl 2xl:max-w-7xl mx-auto">
 
           {/* ── Header ──────────────────────────────────── */}
           <div className="mb-5">
@@ -317,7 +303,7 @@ export default function ResultsPage() {
           )}
 
           {/* ── Overall Score (compact) ───────────────── */}
-          <div className="glass rounded-2xl p-5 mb-5 shadow-glass">
+          <div className="glass rounded-2xl p-4 mb-4 shadow-glass">
             {hasScore ? (
               <div className="flex items-center gap-5 flex-wrap">
                 <ScoreRing score={finalScore} size={76} strokeWidth={6} />
@@ -348,11 +334,11 @@ export default function ResultsPage() {
           </div>
 
           {/* ── 4 Category Cards (2×2 compact grid) ─────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
 
             {/* Voice & Delivery */}
             {!voice?.skipped && voice?.score != null && (
-              <div className="glass rounded-xl p-4 hover:shadow-lg transition-shadow">
+              <div className="glass rounded-xl p-3.5 hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-cyan-100 rounded-lg"><Volume2 size={14} className="text-cyan-600" /></div>
@@ -382,7 +368,7 @@ export default function ResultsPage() {
 
             {/* Content Quality */}
             {!content?.skipped && content?.score != null && (
-              <div className="glass rounded-xl p-4 hover:shadow-lg transition-shadow">
+              <div className="glass rounded-xl p-3.5 hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-blue-100 rounded-lg"><FileText size={14} className="text-blue-600" /></div>
@@ -415,7 +401,7 @@ export default function ResultsPage() {
 
             {/* Confidence & Body Language */}
             {!confidence?.skipped && confidence?.score != null && (
-              <div className="glass rounded-xl p-4 hover:shadow-lg transition-shadow">
+              <div className="glass rounded-xl p-3.5 hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-purple-100 rounded-lg"><User size={14} className="text-purple-600" /></div>
@@ -445,7 +431,7 @@ export default function ResultsPage() {
 
             {/* Engagement */}
             {!engagement?.skipped && engagement?.score != null && (
-              <div className="glass rounded-xl p-4 hover:shadow-lg transition-shadow">
+              <div className="glass rounded-xl p-3.5 hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-pink-100 rounded-lg"><Zap size={14} className="text-pink-600" /></div>
@@ -473,224 +459,30 @@ export default function ResultsPage() {
             )}
           </div>
 
-          {/* ── Collapsible Detailed Metrics ────────────── */}
-          <div className="mb-5">
-            <h2 className="text-base font-bold text-slate-800 mb-2.5 flex items-center gap-2">
-              <TrendingUp size={17} className="text-blue-500" />
-              Detailed Metrics
-            </h2>
-
-            <div className="space-y-3">
-              {/* ── Voice & Delivery Accordion ── */}
-              {!voice?.skipped && voice?.score != null && (
-                <div className={`rounded-xl overflow-hidden border-2 transition-all duration-200 shadow-md ${
-                  openSections.voice 
-                    ? "border-cyan-400 shadow-lg bg-white" 
-                    : "border-slate-300 hover:border-cyan-300 hover:shadow-lg bg-white/95 hover:bg-white"
-                }`}>
-                  <button onClick={() => toggle("voice")} className={`w-full flex items-center justify-between px-5 py-4 transition-all duration-200 text-left cursor-pointer group ${
-                    openSections.voice 
-                      ? "bg-gradient-to-r from-cyan-50 via-cyan-25 to-white" 
-                      : "hover:bg-gradient-to-r hover:from-cyan-50/30 hover:to-white"
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2.5 rounded-lg transition-all duration-200 ${
-                        openSections.voice 
-                          ? "bg-cyan-500 shadow-md" 
-                          : "bg-cyan-100 group-hover:bg-cyan-200"
-                      }`}>
-                        <Volume2 size={17} className={openSections.voice ? "text-white" : "text-cyan-600"} />
-                      </div>
-                      <span className="text-sm font-bold text-slate-800">Voice & Delivery</span>
-                      <Badge {...lvl(voice.score)} />
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-semibold text-cyan-600 group-hover:text-cyan-700">
-                        {openSections.voice ? "Hide Details" : "Show Details"}
-                      </span>
-                      <ChevronDown size={18} className={`text-cyan-600 transition-transform duration-300 ${
-                        openSections.voice ? "rotate-180" : ""
-                      }`} />
-                    </div>
-                  </button>
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                    openSections.voice 
-                      ? "max-h-96 opacity-100" 
-                      : "max-h-0 opacity-0"
-                  }`}>
-                    <div className="px-5 pb-4 pt-1 bg-white border-t border-slate-100">
-                      <MetricRow label="Speaking Speed" value={wpm} unit=" WPM" badge={speedBadge(wpm)}
-                        tooltip={{ what: "Words spoken per minute", why: "Proper pacing helps your audience follow along", ideal: "120–160 WPM",
-                          interpretation: wpm != null ? (wpm < 100 ? "Too slow — try a slightly faster pace" : wpm > 180 ? "Too fast — slow down for clarity" : "Great pace!") : null }} />
-                      <MetricRow label="Filler Words" value={fillerTotal ?? "—"} unit={fillerPct != null ? ` (${fillerPct.toFixed(1)}%)` : ""} badge={fillerBadge(fillerPct)}
-                        tooltip={{ what: "Um, uh, like, you know occurrences", why: "Fillers reduce perceived confidence", ideal: "Below 3% of total words",
-                          interpretation: fillerPct != null ? (fillerPct < 3 ? "Minimal fillers — excellent" : fillerPct < 6 ? "Moderate — try pausing instead" : "High — replace fillers with pauses") : null }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Content Quality Accordion ── */}
-              {!content?.skipped && content?.score != null && (
-                <div className={`rounded-xl overflow-hidden border-2 transition-all duration-200 shadow-md ${
-                  openSections.content 
-                    ? "border-blue-400 shadow-lg bg-white" 
-                    : "border-slate-300 hover:border-blue-300 hover:shadow-lg bg-white/95 hover:bg-white"
-                }`}>
-                  <button onClick={() => toggle("content")} className={`w-full flex items-center justify-between px-5 py-4 transition-all duration-200 text-left cursor-pointer group ${
-                    openSections.content 
-                      ? "bg-gradient-to-r from-blue-50 via-blue-25 to-white" 
-                      : "hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-white"
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2.5 rounded-lg transition-all duration-200 ${
-                        openSections.content 
-                          ? "bg-blue-500 shadow-md" 
-                          : "bg-blue-100 group-hover:bg-blue-200"
-                      }`}>
-                        <FileText size={17} className={openSections.content ? "text-white" : "text-blue-600"} />
-                      </div>
-                      <span className="text-sm font-bold text-slate-800">Content Quality</span>
-                      <Badge {...lvl(content.score)} />
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-semibold text-blue-600 group-hover:text-blue-700">
-                        {openSections.content ? "Hide Details" : "Show Details"}
-                      </span>
-                      <ChevronDown size={18} className={`text-blue-600 transition-transform duration-300 ${
-                        openSections.content ? "rotate-180" : ""
-                      }`} />
-                    </div>
-                  </button>
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                    openSections.content 
-                      ? "max-h-96 opacity-100" 
-                      : "max-h-0 opacity-0"
-                  }`}>
-                    <div className="px-5 pb-4 pt-1 bg-white border-t border-slate-100">
-                      <MetricRow label="Grammar" value={grammarScore != null ? grammarScore.toFixed(1) : null} unit="/100" badge={lvl(grammarScore)}
-                        tooltip={{ what: "Grammatical correctness of your speech", why: "Good grammar conveys professionalism", ideal: "80+ out of 100",
-                          interpretation: text.grammar?.issues?.length > 0 ? `${text.grammar.issues.length} issue(s) found` : "No issues detected" }} />
-                      <MetricRow label="Repetition" value={repetitionScore != null ? repetitionScore.toFixed(1) : null} unit="/100"
-                        tooltip={{ what: "How much you repeat words or phrases", why: "Repetition can bore your audience", ideal: "70+ (less repetition)" }} />
-                      <MetricRow label="Word Count" value={wordCount || "—"} unit=" words"
-                        tooltip={{ what: "Total words spoken", why: "Shows preparation depth", ideal: "Varies by duration" }} />
-                      <div className="flex items-center justify-between py-2 border-b border-slate-100/60 last:border-0">
-                        <div className="flex items-center gap-1 text-[13px] text-slate-600">
-                          <span>Structure</span>
-                          <MetricTooltip what="Intro, body & conclusion presence" why="Clear structure helps audience follow your argument" ideal="All 3 sections present" />
-                        </div>
-                        <div className="flex gap-1.5">
-                          {[{ k: hasIntro, l: "Intro" }, { k: hasBody, l: "Body" }, { k: hasConclusion, l: "Conclusion" }].map((s) => (
-                            <span key={s.l} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.k ? "bg-green-50 text-green-700" : "bg-red-50 text-red-500"}`}>
-                              {s.k ? "✓" : "✗"} {s.l}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Confidence & Body Language Accordion ── */}
-              {!confidence?.skipped && confidence?.score != null && (
-                <div className={`rounded-xl overflow-hidden border-2 transition-all duration-200 shadow-md ${
-                  openSections.confidence 
-                    ? "border-purple-400 shadow-lg bg-white" 
-                    : "border-slate-300 hover:border-purple-300 hover:shadow-lg bg-white/95 hover:bg-white"
-                }`}>
-                  <button onClick={() => toggle("confidence")} className={`w-full flex items-center justify-between px-5 py-4 transition-all duration-200 text-left cursor-pointer group ${
-                    openSections.confidence 
-                      ? "bg-gradient-to-r from-purple-50 via-purple-25 to-white" 
-                      : "hover:bg-gradient-to-r hover:from-purple-50/30 hover:to-white"
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2.5 rounded-lg transition-all duration-200 ${
-                        openSections.confidence 
-                          ? "bg-purple-500 shadow-md" 
-                          : "bg-purple-100 group-hover:bg-purple-200"
-                      }`}>
-                        <User size={17} className={openSections.confidence ? "text-white" : "text-purple-600"} />
-                      </div>
-                      <span className="text-sm font-bold text-slate-800">Confidence</span>
-                      <Badge {...lvl(confidence.score)} />
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-semibold text-purple-600 group-hover:text-purple-700">
-                        {openSections.confidence ? "Hide Details" : "Show Details"}
-                      </span>
-                      <ChevronDown size={18} className={`text-purple-600 transition-transform duration-300 ${
-                        openSections.confidence ? "rotate-180" : ""
-                      }`} />
-                    </div>
-                  </button>
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                    openSections.confidence 
-                      ? "max-h-96 opacity-100" 
-                      : "max-h-0 opacity-0"
-                  }`}>
-                    <div className="px-5 pb-4 pt-1 bg-white border-t border-slate-100">
-                      <MetricRow label="Eye Contact" value={eyeScore != null ? eyeScore.toFixed(1) : null} unit="/100" badge={lvl(eyeScore)}
-                        tooltip={{ what: "Camera/audience eye contact", why: "Builds trust and engagement", ideal: "60%+",
-                          interpretation: video.eye_contact?.assessment?.replace(/_/g, " ") }} />
-                      <MetricRow label="Posture" value={postureScore != null ? postureScore.toFixed(1) : null} unit="/100" badge={lvl(postureScore)}
-                        tooltip={{ what: "Body alignment and positioning", why: "Good posture shows confidence", ideal: "70+",
-                          interpretation: video.posture?.assessment?.replace(/_/g, " ") }} />
-                      <MetricRow label="Gestures" value={gestureFreq != null ? `${gestureFreq.toFixed(0)}%` : null}
-                        tooltip={{ what: "Hand and body movement frequency", why: "Natural gestures enhance delivery", ideal: "10–40% frequency",
-                          interpretation: video.gestures?.assessment?.replace(/_/g, " ") }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Engagement Accordion ── */}
-              {!engagement?.skipped && engagement?.score != null && (
-                <div className={`rounded-xl overflow-hidden border-2 transition-all duration-200 shadow-md ${
-                  openSections.engagement 
-                    ? "border-pink-400 shadow-lg bg-white" 
-                    : "border-slate-300 hover:border-pink-300 hover:shadow-lg bg-white/95 hover:bg-white"
-                }`}>
-                  <button onClick={() => toggle("engagement")} className={`w-full flex items-center justify-between px-5 py-4 transition-all duration-200 text-left cursor-pointer group ${
-                    openSections.engagement 
-                      ? "bg-gradient-to-r from-pink-50 via-pink-25 to-white" 
-                      : "hover:bg-gradient-to-r hover:from-pink-50/30 hover:to-white"
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2.5 rounded-lg transition-all duration-200 ${
-                        openSections.engagement 
-                          ? "bg-pink-500 shadow-md" 
-                          : "bg-pink-100 group-hover:bg-pink-200"
-                      }`}>
-                        <Zap size={17} className={openSections.engagement ? "text-white" : "text-pink-600"} />
-                      </div>
-                      <span className="text-sm font-bold text-slate-800">Engagement</span>
-                      <Badge {...lvl(engagement.score)} />
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-semibold text-pink-600 group-hover:text-pink-700">
-                        {openSections.engagement ? "Hide Details" : "Show Details"}
-                      </span>
-                      <ChevronDown size={18} className={`text-pink-600 transition-transform duration-300 ${
-                        openSections.engagement ? "rotate-180" : ""
-                      }`} />
-                    </div>
-                  </button>
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                    openSections.engagement 
-                      ? "max-h-96 opacity-100" 
-                      : "max-h-0 opacity-0"
-                  }`}>
-                    <div className="px-5 pb-4 pt-1 bg-white border-t border-slate-100">
-                      <MetricRow label="Gesture Engagement" value={gestureFreq != null ? `${gestureFreq.toFixed(0)}%` : null}
-                        tooltip={{ what: "Active use of hand/body gestures", why: "Gestures add energy to delivery", ideal: "10–40%" }} />
-                      <MetricRow label="Confidence Estimate" value={confEstimate != null ? confEstimate.toFixed(1) : null} unit="/100" badge={lvl(confEstimate)}
-                        tooltip={{ what: "AI-estimated confidence from visual + audio cues", why: "Confidence impacts how your message is received", ideal: "70+" }} />
-                    </div>
-                  </div>
-                </div>
-              )}
+          {/* ── Category Breakdown Chart ────────────────── */}
+          <div className="glass rounded-2xl p-4 mb-4">
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">Category Breakdown</h2>
+            <div style={{ width: "100%", height: 320 }}>
+              <ResponsiveContainer>
+                <BarChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 40 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="category" angle={-35} textAnchor="end" height={76} tick={{ fill: "#64748b", fontSize: 12 }} />
+                  <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
+                  <Tooltip
+                    formatter={(value) => [`${Number(value).toFixed(1)}`, "Score"]}
+                    contentStyle={{
+                      borderRadius: 10,
+                      border: "1px solid #e2e8f0",
+                      boxShadow: "0 10px 24px rgba(15,23,42,0.12)",
+                    }}
+                  />
+                  <Bar dataKey="score" radius={[8, 8, 0, 0]}>
+                    {chartData.map((entry) => (
+                      <Cell key={entry.category} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
