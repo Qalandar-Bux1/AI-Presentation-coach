@@ -24,6 +24,13 @@ uploads/*.flv
 # Keep uploads directory
 !uploads/.gitkeep
 
+# Bundled desktop assets (generate with: python scripts\download_bundled_assets.py)
+bin/ffmpeg.exe
+bin/ffprobe.exe
+bin/_ffmpeg_win64_gpl.zip
+models/whisper/*.pt
+!models/whisper/.gitkeep
+
 # Logs
 *.log
 

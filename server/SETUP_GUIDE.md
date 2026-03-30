@@ -51,7 +51,8 @@ nltk.download('stopwords')
 Create/update `.env` file in `server/` directory:
 
 ```env
-MONGO_URI=mongodb://localhost:27017/PresentationCoach
+MONGO_URI=mongodb+srv://buxq4935_db_user:gZoKgwr3vMiBYv3e@cluster0.hsaifuk.mongodb.net/?retryWrites=true&w=majority
+DB_NAME=ai_presentation_coach
 OPENAI_API_KEY=sk-your-api-key-here  # Optional: for LLM feedback
 UPLOAD_FOLDER=./uploads
 ```

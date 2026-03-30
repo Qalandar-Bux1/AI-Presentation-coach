@@ -1,12 +1,17 @@
 flask
 flask-cors
 flask-pymongo
+pymongo[srv]>=4.6.0
+dnspython>=2.6.0
+certifi>=2024.2.2
 python-dotenv
 werkzeug
 bcrypt
 PyJWT
 # Video and Audio Processing
 opencv-python==4.8.1.78
+# Do not upgrade to mediapipe>=0.10.31: legacy `mediapipe.solutions` was removed (no face/pose/hands).
+# Newer 0.10.x wheels may also force numpy 2.x, which breaks pinned scipy/opencv in this project.
 mediapipe==0.10.8
 protobuf==3.20.3
 ffmpeg-python==0.2.0
