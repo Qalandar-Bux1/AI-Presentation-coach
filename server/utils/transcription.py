@@ -3,73 +3,106 @@ Transcription Module
 Converts speech to text using OpenAI Whisper
 """
 
-import whisper
 import os
-import tempfile
+import whisper
+from pathlib import Path
 
+from utils.path_utils import get_whisper_models_dir, is_packaged
 
-# Global model instance (loaded once for efficiency)
 _whisper_model = None
+_loaded_size = None
 
 
-def load_whisper_model(model_size: str = "tiny"):
+def resolve_whisper_model_size() -> str:
+    """
+    Whisper model name to load.
+    - If WHISPER_MODEL_SIZE is set, use it (tiny, base, small, ...).
+    - Else if bundled base.pt exists under server/models/whisper/, use base.
+    - Else default to tiny (fastest dev experience).
+    """
+    env = (os.getenv("WHISPER_MODEL_SIZE") or "").strip().lower()
+    if env:
+        return env
+    base_pt = Path(get_whisper_models_dir()) / "base.pt"
+    if base_pt.is_file():
+        return "base"
+    return "tiny"
+
+
+def load_whisper_model(model_size: str | None = None):
     """
     Load Whisper model (lazy loading for efficiency).
-    
-    Args:
-        model_size: Model size (tiny, base, small, medium, large)
-                   tiny is faster and smaller (~75MB vs ~150MB for base)
-                   Good for short videos and faster analysis
+    Uses download_root pointing at bundled server/models/whisper for offline-capable packaged builds.
     """
-    global _whisper_model
-    if _whisper_model is None:
-        print(f"[Whisper] Loading model: {model_size}...")
-        print(f"[Whisper] Note: First-time download may take a few minutes (~75MB for tiny model)")
-        print(f"[Whisper] Model will be cached for future use")
-        try:
-            _whisper_model = whisper.load_model(model_size)
-            print(f"[Whisper] ✅ Model '{model_size}' loaded successfully!")
-        except Exception as e:
-            print(f"[Whisper] ❌ Error loading model: {str(e)}")
-            raise Exception(f"Failed to load Whisper model: {str(e)}")
+    global _whisper_model, _loaded_size
+
+    if model_size is None:
+        model_size = resolve_whisper_model_size()
+
+    if _whisper_model is not None and _loaded_size == model_size:
+        return _whisper_model
+
+    download_root = get_whisper_models_dir()
+    os.makedirs(download_root, exist_ok=True)
+
+    # Offline-capable behavior: in packaged mode, fail fast if model weights are missing.
+    expected_file = Path(download_root) / f"{model_size}.pt"
+    if is_packaged() and not expected_file.is_file():
+        raise FileNotFoundError(
+            f"Whisper model file not found: {expected_file}\n"
+            f"Place the model weights under: {expected_file.parent} (e.g., base.pt or tiny.pt) before building the desktop app.\n"
+            f"You can generate them with: scripts\\download_bundled_assets.py --whisper-only --whisper {model_size}"
+        )
+
+    print(f"[Whisper] Loading model: {model_size}...")
+    print(f"[Whisper] download_root={download_root}")
+    print("[Whisper] Note: first run may download weights if the .pt file is not present yet")
+
+    try:
+        _whisper_model = whisper.load_model(model_size, download_root=download_root)
+        _loaded_size = model_size
+        print(f"[Whisper] OK: Model '{model_size}' loaded successfully!")
+    except Exception as e:
+        print(f"[Whisper] ERROR: Error loading model: {str(e)}")
+        _whisper_model = None
+        _loaded_size = None
+        raise Exception(f"Failed to load Whisper model: {str(e)}") from e
+
     return _whisper_model
 
 
-def transcribe_audio(audio_path: str, model_size: str = "tiny") -> dict:
+def transcribe_audio(audio_path: str, model_size: str | None = None) -> dict:
     """
     Transcribe audio to text using Whisper.
-    
+
     Args:
         audio_path: Path to the audio file
-        model_size: Whisper model size (tiny, base, small, medium, large)
-    
+        model_size: Whisper model size (optional; defaults to resolve_whisper_model_size())
+
     Returns:
-        Dictionary containing:
-        - text: Full transcribed text
-        - segments: List of segments with timestamps
-        - language: Detected language
+        Dictionary containing text, segments, language
     """
     if not os.path.exists(audio_path):
         raise FileNotFoundError(f"Audio file not found: {audio_path}")
-    
+
+    if model_size is None:
+        model_size = resolve_whisper_model_size()
+
     try:
-        # Load model
         model = load_whisper_model(model_size)
-        
-        # Transcribe audio (optimized for speed)
+
         print(f"Transcribing audio: {audio_path}")
         try:
             result = model.transcribe(
                 audio_path,
-                language="en",  # Force English (faster than auto-detect)
+                language="en",
                 task="transcribe",
                 verbose=False,
-                temperature=0.0,  # Use deterministic decoding for faster processing
-                condition_on_previous_text=False,  # Disable for faster processing
-                fp16=True  # Use half precision for faster inference (if GPU available)
+                temperature=0.0,
+                condition_on_previous_text=False,
+                fp16=True,
             )
         except Exception as fp16_error:
-            # Fallback if fp16 is not supported (e.g., CPU-only systems)
             print(f"[Whisper] fp16 not supported, using default precision: {str(fp16_error)}")
             result = model.transcribe(
                 audio_path,
@@ -77,43 +110,37 @@ def transcribe_audio(audio_path: str, model_size: str = "tiny") -> dict:
                 task="transcribe",
                 verbose=False,
                 temperature=0.0,
-                condition_on_previous_text=False
+                condition_on_previous_text=False,
             )
-        
+
         return {
             "text": result["text"].strip(),
             "segments": result.get("segments", []),
-            "language": result.get("language", "en")
+            "language": result.get("language", "en"),
         }
-    
+
     except Exception as e:
-        raise Exception(f"Transcription failed: {str(e)}")
+        raise Exception(f"Transcription failed: {str(e)}") from e
 
 
 def get_transcription_with_timestamps(audio_path: str) -> list:
     """
     Get transcription with word-level timestamps.
-    
-    Args:
-        audio_path: Path to the audio file
-    
-    Returns:
-        List of dictionaries with word, start, and end times
     """
     try:
         model = load_whisper_model()
         result = model.transcribe(audio_path, word_timestamps=True)
-        
+
         words = []
         for segment in result.get("segments", []):
             for word_info in segment.get("words", []):
                 words.append({
                     "word": word_info["word"].strip(),
                     "start": word_info["start"],
-                    "end": word_info["end"]
+                    "end": word_info["end"],
                 })
-        
+
         return words
-    
+
     except Exception as e:
-        raise Exception(f"Failed to get word timestamps: {str(e)}")
+        raise Exception(f"Failed to get word timestamps: {str(e)}") from e

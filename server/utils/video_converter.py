@@ -2,6 +2,8 @@ import os
 import subprocess
 import logging
 
+from utils.path_utils import resolve_ffmpeg_executable
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,8 +30,9 @@ def convert_webm_to_mp4(input_path, output_path):
         # -preset fast: encoding speed
         # -c:a aac: use AAC codec for audio
         # -y: overwrite output file if exists
+        ffmpeg_bin = resolve_ffmpeg_executable()
         command = [
-            'ffmpeg', '-y',
+            ffmpeg_bin, '-y',
             '-i', input_path,
             '-c:v', 'libx264',
             '-preset', 'fast',

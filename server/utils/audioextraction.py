@@ -8,6 +8,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from utils.path_utils import resolve_ffprobe_executable, resolve_ffmpeg_executable
+
 
 def extract_audio(video_path: str, output_format: str = "wav") -> str:
     """
@@ -32,6 +34,7 @@ def extract_audio(video_path: str, output_format: str = "wav") -> str:
     audio_path = os.path.join(temp_dir, f"{video_name}_audio.{output_format}")
     
     try:
+        ffmpeg_bin = resolve_ffmpeg_executable()
         # Use ffmpeg to extract audio
         # -i: input file
         # -vn: disable video
@@ -39,7 +42,7 @@ def extract_audio(video_path: str, output_format: str = "wav") -> str:
         # -ar: sample rate (16000 Hz for Whisper)
         # -ac: audio channels (mono)
         command = [
-            "ffmpeg",
+            ffmpeg_bin,
             "-i", video_path,
             "-vn",  # No video
             "-acodec", "pcm_s16le" if output_format == "wav" else "libmp3lame",
@@ -84,8 +87,9 @@ def get_audio_duration(audio_path: str) -> float:
         Duration in seconds
     """
     try:
+        ffprobe_bin = resolve_ffprobe_executable()
         command = [
-            "ffprobe",
+            ffprobe_bin,
             "-v", "error",
             "-show_entries", "format=duration",
             "-of", "default=noprint_wrappers=1:nokey=1",

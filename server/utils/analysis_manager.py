@@ -89,16 +89,17 @@ class AnalysisManager:
             print(f"[Analysis Thread] Progress: 15% - Transcribing audio...")
             
             # Step 2: Transcribe (15-30%)
-            from utils.transcription import transcribe_audio, load_whisper_model
-            print(f"[Analysis Thread] Loading Whisper model (may download on first use)...")
+            from utils.transcription import transcribe_audio, load_whisper_model, resolve_whisper_model_size
+            wsize = resolve_whisper_model_size()
+            print(f"[Analysis Thread] Loading Whisper model (size={wsize}, may download on first use)...")
             try:
-                load_whisper_model("tiny")
+                load_whisper_model(wsize)
                 print(f"[Analysis Thread] Whisper model ready")
             except Exception as model_error:
                 print(f"[Analysis Thread] Warning: Model load error: {model_error}")
             self._update_progress(session_id, 20, "Transcribing audio (this may take a moment)...")
             print(f"[Analysis Thread] Starting transcription...")
-            transcription = transcribe_audio(audio_path, model_size="tiny")
+            transcription = transcribe_audio(audio_path, model_size=wsize)
             text = transcription["text"].strip()
             word_count = len(text.split()) if text else 0
             print(f"[Analysis Thread] Transcription complete. Text: '{text}' ({word_count} words)")
@@ -116,7 +117,7 @@ class AnalysisManager:
             # SANITIZE FRAME COUNT: If OpenCV reports invalid/overflow values, calculate from duration
             if total_frames <= 0 or total_frames > 1000000: # Check for overflow/negative
                 if duration > 0 and fps_temp > 0:
-                     print(f"[Analysis Thread] ⚠️ Sanitizing frame count: OpenCV reported {total_frames}, using duration calculation")
+                     print(f"[Analysis Thread] WARNING: Sanitizing frame count: OpenCV reported {total_frames}, using duration calculation")
                      total_frames = int(duration * fps_temp)
                 else:
                      total_frames = 0
@@ -138,11 +139,11 @@ class AnalysisManager:
             warning_message = None
             if not is_eligible:
                 warning_message = "; ".join(eligibility_warnings)
-                print(f"[Analysis Thread] ⚠️  ELIGIBILITY WARNINGS: {warning_message}")
+                print(f"[Analysis Thread] WARNING: ELIGIBILITY WARNINGS: {warning_message}")
                 print(f"[Analysis Thread] Will continue with limited analysis (some metrics may be unavailable)")
             
             if not speech_detected:
-                print(f"[Analysis Thread] ⚠️  WARNING: Insufficient speech detected ({word_count} words < {MIN_WORDS_FOR_SPEECH} minimum)")
+                print(f"[Analysis Thread] WARNING: Insufficient speech detected ({word_count} words < {MIN_WORDS_FOR_SPEECH} minimum)")
                 print(f"[Analysis Thread] Speech-based metrics will be marked as 'Not Evaluated'")
             
             self._update_progress(session_id, 30, "Analyzing audio...")
@@ -212,7 +213,7 @@ class AnalysisManager:
                 camera_angle = quality_metrics.get("camera_angle")
                 
                 if not face_detected:
-                    print(f"[Analysis Thread] ⚠️  WARNING: Face not detected or below threshold")
+                    print(f"[Analysis Thread] WARNING: Face not detected or below threshold")
                     print(f"[Analysis Thread] Face-based metrics will be marked as 'Not Evaluated'")
                     if not warning_message:
                         warning_message = "Face not detected in video. Body language metrics unavailable."
@@ -320,10 +321,10 @@ class AnalysisManager:
             # Determine analysis status
             if warning_message:
                 analysis_status = "completed_with_warning"
-                print(f"[Analysis Thread] ⚠️  Analysis completed with warnings: {warning_message}")
+                print(f"[Analysis Thread] WARNING: Analysis completed with warnings: {warning_message}")
             else:
                 analysis_status = "completed"
-                print(f"[Analysis Thread] ✅ Analysis completed successfully")
+                print(f"[Analysis Thread] Analysis completed successfully")
             
             # Compile complete report with standardized format
             analysis_report = {
@@ -398,12 +399,12 @@ class AnalysisManager:
             
             # Mark as completed
             self._update_progress(session_id, 100, "Analysis complete!", completed=True)
-            print(f"[Analysis Thread] ✅ Analysis completed successfully for session {session_id}")
+            print(f"[Analysis Thread] Analysis completed successfully for session {session_id}")
             
         except Exception as e:
             error_msg = str(e)
             import traceback
-            print(f"[Analysis Thread] ❌ Analysis error for session {session_id}: {error_msg}")
+            print(f"[Analysis Thread] ERROR: Analysis error for session {session_id}: {error_msg}")
             print(f"[Analysis Thread] Traceback: {traceback.format_exc()}")
             
             # Update status to failed in DB
