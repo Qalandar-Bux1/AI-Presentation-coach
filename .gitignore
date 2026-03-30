@@ -58,3 +58,11 @@ server/uploads/*.flv
 
 # Keep uploads directory structure
 !server/uploads/.gitkeep
+
+# PyInstaller — keep checked-in spec (root *.spec rule would ignore it)
+!server/pyinstaller_backend.spec
+
+# Desktop packaging
+electron/node_modules/
+electron/dist/
+client/out/
