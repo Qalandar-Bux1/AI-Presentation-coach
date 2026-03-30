@@ -6,9 +6,10 @@ Run this from the server directory: python check_email_config.py
 
 import os
 from dotenv import load_dotenv
+from utils.path_utils import get_env_path
 
-# Load .env file
-env_path = os.path.join(os.path.dirname(__file__), '.env')
+# Load .env file (dev + packaged safe)
+env_path = get_env_path()
 load_dotenv(env_path)
 
 print("=" * 60)

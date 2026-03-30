@@ -1,22 +1,37 @@
 from datetime import datetime
-import pymongo
 from bson import ObjectId
 from utils.auth import verify_token
 from flask import Blueprint, request, jsonify, send_from_directory
-from dotenv import load_dotenv
 import os
 from werkzeug.utils import secure_filename
+from config.database import get_collection
+from utils.path_utils import resolve_uploads_dir
 
-load_dotenv()
 session_bp = Blueprint('session', __name__, url_prefix='/session')
 
-client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = client["PresentationCoach"]
-collection_users = db["user"]
-collection_sessions = db["session"]
+collection_users = None
+collection_sessions = None
+db_init_error = None
+
+
+def ensure_db_connection():
+    global collection_users, collection_sessions, db_init_error
+    if collection_users is not None and collection_sessions is not None:
+        return None
+    try:
+        collection_users = get_collection("user")
+        collection_sessions = get_collection("session")
+        db_init_error = None
+        return None
+    except Exception as exc:
+        db_init_error = str(exc)
+        return jsonify({
+            "error": "Database connection is unavailable",
+            "details": db_init_error
+        }), 503
 
 ALLOWED_EXTENSIONS = {"mp4", "webm"}
-UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", os.path.join(os.getcwd(), "uploads"))
+UPLOAD_FOLDER = resolve_uploads_dir(os.getenv("UPLOAD_FOLDER"))
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def _allowed_file(filename: str) -> bool:
@@ -25,6 +40,9 @@ def _allowed_file(filename: str) -> bool:
 #  CREATE SESSION
 @session_bp.route('/create', methods=['POST'])
 def create_session():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "")
@@ -56,6 +74,9 @@ def create_session():
 #  UPLOAD VIDEO + CREATE SESSION
 @session_bp.route('/upload', methods=['POST'])
 def upload_video():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "")
@@ -68,7 +89,7 @@ def upload_video():
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        print("Request.files keys:", request.files.keys())  # ✅ debug
+        print("Request.files keys:", request.files.keys())  # debug
 
         if 'file' not in request.files:
             return jsonify({"error": "No file part in request"}), 400
@@ -109,6 +130,9 @@ def upload_video():
 #  GET USER SESSIONS
 @session_bp.route('/all', methods=['GET'])
 def get_sessions():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "")
@@ -139,6 +163,9 @@ def get_user_videos():
 # Videos with feedback only
 @session_bp.route('/videos/with-feedback', methods=['GET'])
 def get_user_videos_with_feedback():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "")
@@ -165,6 +192,9 @@ def get_user_videos_with_feedback():
 # DELETE SESSION (and video file)
 @session_bp.route('/<session_id>', methods=['DELETE'])
 def delete_session(session_id):
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "")
@@ -209,6 +239,9 @@ def delete_session(session_id):
 # GET SESSION BY ID (for download)
 @session_bp.route('/<session_id>', methods=['GET'])
 def get_session(session_id):
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "")
@@ -244,6 +277,9 @@ def analyze_session(session_id):
     # Handle CORS preflight
     if request.method == 'OPTIONS':
         return jsonify({}), 200
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     
     try:
         auth_header = request.headers.get("Authorization", "")
@@ -299,7 +335,11 @@ def analyze_session(session_id):
         session_obj_id = ObjectId(session_id)
         collection_sessions.update_one(
             {"_id": session_obj_id},
-            {"$set": {"analysis_status": "processing"}}
+            {"$set": {
+                "analysis_status": "processing",
+                "analysis_started_at": datetime.now().isoformat(),
+                "analysis_error": None
+            }}
         )
         print(f"[API] Set analysis_status to 'processing' for session {session_id}")
 
@@ -322,7 +362,7 @@ def analyze_session(session_id):
         if file_size == 0:
             return jsonify({"error": "Video file is empty"}), 400
         
-        print(f"[API] ✅ Video file verified: {video_path} ({file_size} bytes)")
+        print(f"[API] Video file verified: {video_path} ({file_size} bytes)")
         
         # Quick duration check before starting analysis (if not already failed)
         if analysis_status != "failed":
@@ -359,10 +399,10 @@ def analyze_session(session_id):
                         "video_too_short": True
                     }), 400
                 
-                print(f"[API] ✅ Video duration check passed: {duration:.1f}s")
+                print(f"[API] Video duration check passed: {duration:.1f}s")
             except Exception as duration_error:
                 # If duration check fails, continue with analysis (let it fail during validation)
-                print(f"[API] ⚠️  Duration check failed, continuing with analysis: {str(duration_error)}")
+                print(f"[API] WARNING: Duration check failed, continuing with analysis: {str(duration_error)}")
 
         # Start analysis in background thread
         from utils.analysis_manager import get_analysis_manager
@@ -389,7 +429,7 @@ def analyze_session(session_id):
             print(f"[API] Failed to start analysis for session {session_id}")
             return jsonify({"error": "Failed to start analysis (may already be running)"}), 500
 
-        print(f"[API] ✅ Analysis started successfully for session {session_id}")
+        print(f"[API] Analysis started successfully for session {session_id}")
         return jsonify({
             "success": True,
             "message": "Analysis started successfully",
@@ -398,7 +438,7 @@ def analyze_session(session_id):
 
     except Exception as e:
         import traceback
-        print(f"[API] ❌ Analysis start error: {str(e)}")
+        print(f"[API] ERROR: Analysis start error: {str(e)}")
         print(f"[API] Traceback: {traceback.format_exc()}")
         return jsonify({"error": f"Failed to start analysis: {str(e)}"}), 500
 
@@ -409,6 +449,9 @@ def get_analysis_progress(session_id):
     # Handle CORS preflight
     if request.method == 'OPTIONS':
         return jsonify({}), 200
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     
     try:
         auth_header = request.headers.get("Authorization", "")
@@ -491,11 +534,31 @@ def get_analysis_progress(session_id):
                     "message": manager_progress.get("message", "Processing...")
                 }), 200
             else:
-                # Status is processing but no manager progress (might have restarted server)
+                # Status is processing but no manager progress.
+                # This commonly happens after backend restarts/crashes mid-analysis.
+                analysis_started_at = session.get("analysis_started_at")
+                try:
+                    started_dt = datetime.fromisoformat(analysis_started_at) if analysis_started_at else None
+                except Exception:
+                    started_dt = None
+
+                if started_dt and (datetime.now() - started_dt).total_seconds() > 45:
+                    interrupted_msg = "Analysis was interrupted on the server. Please click Analyze again."
+                    collection_sessions.update_one(
+                        {"_id": session_obj_id},
+                        {"$set": {"analysis_status": "failed", "analysis_error": interrupted_msg}}
+                    )
+                    return jsonify({
+                        "status": "failed",
+                        "progress": 0,
+                        "message": interrupted_msg,
+                        "error": interrupted_msg
+                    }), 200
+
                 return jsonify({
                     "status": "processing",
-                    "progress": 50,
-                    "message": "Analysis in progress..."
+                    "progress": 15,
+                    "message": "Analysis is initializing..."
                 }), 200
         
         # Not started
@@ -523,6 +586,9 @@ def analyze_video():
     # Handle CORS preflight
     if request.method == 'OPTIONS':
         return jsonify({}), 200
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     
     try:
         auth_header = request.headers.get("Authorization", "")

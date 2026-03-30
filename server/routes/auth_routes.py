@@ -5,21 +5,43 @@ from utils.auth import (
     generate_reset_token, verify_reset_token
 )
 from utils.email_service import send_verification_email, send_password_reset_email
-import pymongo
-from dotenv import load_dotenv
 import os
+from config.database import get_collection
 
-load_dotenv()
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-# MongoDB Connection
-client = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = client["PresentationCoach"]
-collection_users = db["user"]
+collection_users = None
+db_init_error = None
+
+
+def ensure_db_connection():
+    global collection_users, db_init_error
+    if collection_users is not None:
+        return None
+    try:
+        collection_users = get_collection("user")
+        db_init_error = None
+        return None
+    except Exception as exc:
+        db_init_error = str(exc)
+        return jsonify({
+            "error": "Database connection is unavailable",
+            "details": db_init_error
+        }), 503
+
+
+def _bool_env(name: str, default: bool) -> bool:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+    return raw_value.strip().lower() in ("1", "true", "yes", "on")
 
 #  CREATE USER (Signup) - Email-First Verification
 @auth_bp.route('/create', methods=['POST'])
 def create_user():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         data = request.get_json()
 
@@ -59,8 +81,37 @@ def create_user():
         if not email_sent:
             # Email failed - DO NOT create account
             error_message = email_error or "Failed to send verification email"
-            
-            # Provide helpful error message
+
+            # Development-safe fallback: allow signup even when SMTP fails.
+            # Set ALLOW_SIGNUP_WITHOUT_EMAIL=false in production to enforce strict verification.
+            allow_signup_without_email = _bool_env("ALLOW_SIGNUP_WITHOUT_EMAIL", True)
+            if allow_signup_without_email:
+                hashed_password = hash_password(password)
+                try:
+                    collection_users.insert_one({
+                        'username': username,
+                        'email': email,
+                        'password': hashed_password,
+                        'role': role,
+                        'studentId': studentId,
+                        'program': program,
+                        'semester': semester,
+                        'phone': phone,
+                        'emailVerified': True,
+                        'emailVerificationSkipped': True,
+                        'emailError': error_message,
+                    })
+                    return jsonify({
+                        "success": True,
+                        "message": "Account created. Email service is currently unavailable, so verification was skipped for this account."
+                    }), 201
+                except Exception as db_error:
+                    return jsonify({
+                        "error": "Account creation failed while handling email service fallback.",
+                        "details": str(db_error)
+                    }), 500
+
+            # Strict behavior when fallback is disabled
             if "SMTP" in error_message or "authentication" in error_message.lower():
                 return jsonify({
                     "error": "Email service is not properly configured. Please contact support or try again later.",
@@ -115,6 +166,9 @@ def create_user():
 #  VERIFY EMAIL
 @auth_bp.route('/verify-email', methods=['POST'])
 def verify_email():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         data = request.get_json()
         token = data.get('token')
@@ -148,6 +202,9 @@ def verify_email():
 #  LOGIN USER
 @auth_bp.route('/login', methods=['POST'])
 def login_user():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         data = request.get_json()
         email = data.get('email')
@@ -180,6 +237,9 @@ def login_user():
 #  FORGOT PASSWORD
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         data = request.get_json()
         email = data.get('email')
@@ -225,6 +285,9 @@ def forgot_password():
 #  RESET PASSWORD
 @auth_bp.route('/reset-password', methods=['POST'])
 def reset_password():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         data = request.get_json()
         token = data.get('token')
@@ -306,6 +369,9 @@ def test_email_config():
 #  GET USER DETAILS
 @auth_bp.route('/me', methods=['GET'])
 def get_user_details():
+    db_error = ensure_db_connection()
+    if db_error:
+        return db_error
     try:
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "")

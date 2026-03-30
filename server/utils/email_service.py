@@ -4,14 +4,14 @@ from email.mime.multipart import MIMEMultipart
 import os
 import logging
 from dotenv import load_dotenv
+from utils.path_utils import get_env_path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment variables from server directory
-env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
-load_dotenv(env_path)
+# Load environment variables from correct location in dev and packaged mode.
+load_dotenv(get_env_path())
 
 def check_smtp_config():
     """
