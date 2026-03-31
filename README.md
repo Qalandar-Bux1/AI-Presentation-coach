@@ -1,78 +1,114 @@
-AI Presentation Coach
-Project Description
+<div align="center">
+  <img src="https://img.shields.io/badge/Status-Active_Development-success?style=for-the-badge" alt="Status Badge"/>
+  <img src="https://img.shields.io/badge/Python-3.x-blue?style=for-the-badge&logo=python" alt="Python Badge" />
+  <img src="https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js" alt="Next.js Badge" />
+  <img src="https://img.shields.io/badge/Flask-API-red?style=for-the-badge&logo=flask" alt="Flask Badge" />
 
-The AI Presentation Coach is a web-based application designed to help users improve their presentation skills. The system will eventually provide AI-powered feedback analyzing eye contact, posture, gestures, filler words, and speech clarity.
+  <h1>🎙️ AI Presentation Coach</h1>
+  <p>Practice smarter and deliver with confidence using AI-powered analysis.</p>
+</div>
 
-Currently, the project implements the basic framework and core functionalities, with AI feedback planned for future development.
+---
 
-Current Progress (30%)
+## 📖 Overview
 
-Implemented features include:
+The **AI Presentation Coach** is a modern, web-based platform designed to help users refine and master their presentation skills. By leveraging advanced video processing and an intuitive interface, the application analyzes your delivery, providing actionable feedback on your performance.
 
-User Authentication: Sign up, login, and session management
+Whether you're preparing for a boardroom pitch, a conference, or a student presentation, AI Presentation Coach gives you real-time insights to improve your public speaking.
 
-Video Management:
+![Landing Page](./docs/landing.png)
 
-Upload recorded presentation videos
+## ✨ Key Features
 
-Record videos directly through the app
+- **User Accounts & Profiles**: Secure signup, login, and personalized progress tracking across sessions.
+- **Video Management**: Seamlessly upload and manage your past presentations directly from the interactive dashboard.
+- **Presentation Hub**: Start live recordings or upload prior videos to be queued for analysis.
+- **Feedback & Metrics**: After processing, receive a detailed "Feedback Report" breaking down:
+  - Overall Score (Quality Snapshot)
+  - Key Strengths to keep consistent
+  - Items to Focus on for future improvement
+- **Desktop Ready**: Configured for simple packaging into a standalone, executable desktop application via PyInstaller and Electron. 
 
-View all uploaded videos by the user
+---
 
-User Profile: View and manage user details
+## 🎨 Interface Preview
 
-Frontend & Backend Integration: Next.js frontend communicates with Flask backend
+### 🏠 Dashboard
+Your personal command center. Track total videos created, recently analyzed content, and dive directly into quick actions like starting a new session or reviewing past feedback.
+![Dashboard Screenshot](./docs/dashboard.png)
 
-Note: AI-powered feedback (analysis of speech and non-verbal cues) will be implemented in the next phases.
+### 📊 Feedback Report
+The core of the platform. Receive granular, data-driven feedback detailing exactly what went well and what needs adjustment.
+![Feedback Screenshot](./docs/feedback.png)
 
-Tech Stack
+### 🎥 My Videos
+Easily watch, report on, or delete previously recorded presentation sessions. 
+![My Videos Screenshot](./docs/my-videos.png)
 
-Frontend:
+### 🔒 Login & Authentication
+A beautiful, responsive authentication flow securing your presentation data.
+![Login Screenshot](./docs/login.png)
 
-Next.js
+---
 
-React.js
+## 🛠️ Technology Stack
 
-Tailwind CSS / Custom CSS
+**Frontend (Client)**
+* **Next.js & React**: For lightning-fast rendering and interactive components.
+* **Tailwind CSS / Custom Styling**: For a modern, responsive, and sleek "dark-mode" leaning interface.
 
-Backend:
+**Backend (Server)**
+* **Flask (Python)**: Robust API routing handling authentication, session states, and video proxying.
+* **MongoDB Atlas**: Secure cloud database storing user information, encrypted passwords, and video metadata.
+* **Whisper & FFMPEG**: *Pre-configured* for cutting-edge audio extraction and transcription tracking.
 
-Flask
+**App Packaging**
+* **Electron & PyInstaller**: Ready-to-build scripts (`build_backend.cmd`, `build-desktop.ps1`) to compile the client and server into a standalone cross-platform app!
 
-GUI / Future AI Modules:
+---
 
-Mediapipe / OpenCV / NLP libraries (for AI feedback, future implementation)
+## 🚀 Installation & Setup
 
-Version Control:
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Qalandar-Bux1/AI-Presentation-coach.git
+   cd AI-Presentation-coach
+   ```
 
-GitHub
+2. **Backend Setup (Flask)**
+   Ensure you have Python installed and run the following commands:
+   ```bash
+   cd server
+   python -m venv venv
+   # Activate Environment:
+   # Windows: venv\Scripts\activate
+   # Mac/Linux: source venv/bin/activate
+   
+   pip install -r requirements.txt
+   ```
+   *Note: Ensure you have populated the `.env` file in the server directory with your MongoDB Atlas URI (`MONGO_URI`) and Flask configurations.*
+   ```bash
+   python app.py
+   ```
 
-Installation
-Backend (Flask)
-git clone https://github.com/yourusername/ai-presentation-coach.git
-cd backend
-python -m venv venv
-source venv/bin/activate       # Linux / Mac
-venv\Scripts\activate          # Windows
-pip install -r requirements.txt
-python app.py
+3. **Frontend Setup (Next.js)**
+   Open a new terminal session.
+   ```bash
+   cd client
+   npm install
+   npm run dev
+   ```
+   Your application will now be running simultaneously at `http://localhost:3000`.
 
-Frontend (Next.js)
-cd ../frontend
-npm install
-npm run dev
+---
 
+## 🔮 Future Roadmap
 
-Open http://localhost:3000 in your browser.
+- [ ] Complete integration of the Mediapipe framework for live posture and eye-contact tracking.
+- [ ] Add real-time "filler-word" counters ("um", "uh", "you know").
+- [ ] Advanced dynamic charts visualizing progress across multiple time horizons.
+- [ ] Direct cloud storage integrations for video (AWS S3 / Firebase).
 
-Future Work
+---
 
-Implement AI Feedback Module: eye contact, gestures, posture, filler words detection
-
-Real-time analysis during live presentations
-
-Feedback visualization with charts and graphs
-
-User progress tracking and improvement suggestions
-
-Deployment for public access
+> **Note on Adding Images**: To get the preview images showing up locally or on GitHub, place the 5 provided screenshot files into a new `docs/` folder in the root of the project with the names: `landing.png`, `dashboard.png`, `feedback.png`, `my-videos.png`, and `login.png`.
