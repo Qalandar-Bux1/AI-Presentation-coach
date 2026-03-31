@@ -66,3 +66,9 @@ server/uploads/*.flv
 electron/node_modules/
 electron/dist/
 client/out/
+
+# Ignore bloated frontend build inside electron
+electron/resources/frontend/
+
+# Ignore compiled backend executables
+electron/resources/*.exe
